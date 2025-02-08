@@ -7,7 +7,7 @@ plugins {
 
 description = "Chromium Downloader"
 group = "io.github.zimoyin"
-version = "1.0"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -41,7 +41,7 @@ mavenPublishing {
         throw IllegalArgumentException("signing.password is not set")
     }
 
-    coordinates("io.github.zimoyin", "ChromiumDownloader", "1.0")
+    coordinates("io.github.zimoyin", "ChromiumDownloader", version.toString())
 
     pom {
         name.set("ChromiumDownloader")

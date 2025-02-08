@@ -8,17 +8,17 @@ import java.net.Proxy
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.extension
+import kotlin.io.path.name
 import kotlin.jvm.optionals.getOrDefault
 import kotlin.jvm.optionals.getOrNull
 
 /**
- *
  * @author : zimo
  * @date : 2025/02/08
  */
 class ChromiumLoader {
     companion object {
-        fun downloadAndLoad(proxy: Proxy? = null,path: String = "./chrome"): ChromeOptions {
+        fun downloadAndLoad(proxy: Proxy? = null, path: String = "./chrome"): ChromeOptions {
             val download = ChromiumDownloader(Positioner.getLastPosition(), proxy, path)
             val chromePath = kotlin.runCatching {
                 findChrome(path)
@@ -40,48 +40,93 @@ class ChromiumLoader {
         fun findChrome(path: String = "./chrome"): String {
             return when (Platform.currentPlatform()) {
                 Platform.Linux -> {
-                    TODO()
+                    val userPath = Paths.get(path)
+                    val chromeExecutable = Files.walk(userPath)
+                        .filter { Files.isExecutable(it) }
+                        .filter { file ->
+                            val fileName = file.fileName.name
+                            fileName == "google-chrome" || fileName == "chromium" || fileName == "chrome" || fileName.contains(
+                                "chrome",
+                                ignoreCase = true
+                            )
+                        }
+                        .findFirst()
+                        .orElseGet {
+                            val defaultPaths = listOf(
+                                Paths.get("/usr/bin/google-chrome"),
+                                Paths.get("/usr/bin/chromium"),
+                                Paths.get("/usr/bin/chromium-browser"),
+                                Paths.get("/usr/local/bin/chromium")
+                            )
+                            defaultPaths.firstOrNull { Files.exists(it) }
+                                ?: throw RuntimeException("Chrome executable not found in $path or default locations")
+                        }
+                    chromeExecutable.toString()
                 }
 
                 Platform.Mac -> {
-                    TODO()
+                    val userPath = Paths.get(path)
+                    val chromeExecutable = Files.walk(userPath)
+                        .filter { Files.isExecutable(it) }
+                        .filter { file ->
+                            val fileName = file.fileName.name
+                            fileName == "Google Chrome" || fileName.contains("chrome", ignoreCase = true)
+                        }
+                        .findFirst()
+                        .orElseGet {
+                            val defaultPath = Paths.get("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+                            if (Files.exists(defaultPath)) {
+                                defaultPath
+                            } else {
+                                throw RuntimeException("Chrome executable not found in $path or default location")
+                            }
+                        }
+                    chromeExecutable.toString()
                 }
 
                 Platform.Win -> {
-                    // 查询指定位置是否存在 chrome
                     Files.walk(Paths.get(path))
                         .filter { it.extension == "exe" }
-                        .filter { it.fileName.toString().contains("chrome") }
+                        .filter { it.fileName.name.contains("chrome", ignoreCase = true) }
                         .findFirst()
                         .getOrDefault(Paths.get("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"))
                         .toString()
                 }
 
-                else -> throw RuntimeException("not support platform")
+                else -> throw RuntimeException("Unsupported platform")
             }
         }
 
         fun findChromeDriver(path: String = "./chrome"): String {
-            // 深度优先
             return when (Platform.currentPlatform()) {
                 Platform.Linux -> {
-                    TODO()
+                    Files.walk(Paths.get(path))
+                        .filter { Files.isExecutable(it) }
+                        .filter { it.fileName.name == "chromedriver" }
+                        .findFirst()
+                        .orElseThrow { RuntimeException("chromedriver not found in $path") }
+                        .toString()
                 }
 
                 Platform.Mac -> {
-                    TODO()
+                    Files.walk(Paths.get(path))
+                        .filter { Files.isExecutable(it) }
+                        .filter { it.fileName.name == "chromedriver" }
+                        .findFirst()
+                        .orElseThrow { RuntimeException("chromedriver not found in $path") }
+                        .toString()
                 }
 
                 Platform.Win -> {
                     Files.walk(Paths.get(path))
                         .filter { it.extension == "exe" }
-                        .filter { it.fileName.toString().contains("chromedriver") }
+                        .filter { it.fileName.name.contains("chromedriver", ignoreCase = true) }
                         .findFirst()
-                        .get()
+                        .orElseThrow { RuntimeException("chromedriver not found in $path") }
                         .toString()
                 }
 
-                else -> throw RuntimeException("not support platform")
+                else -> throw RuntimeException("Unsupported platform")
             }
         }
     }

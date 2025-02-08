@@ -15,3 +15,6 @@ val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
 val options = ChromiumLoader.downloadAndLoad(proxy)
 val driver = ChromeDriver(options)
 ```
+
+---- 
+已经发布到了 Maven 仓库
