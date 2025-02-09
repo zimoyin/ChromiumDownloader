@@ -50,7 +50,7 @@ class ChromiumLoader {
 
         fun findChrome(path: String = "./chrome"): String {
             return when (Platform.currentPlatform()) {
-                Platform.Linux -> {
+                Platform.Linux, Platform.Linux_x64 -> {
                     val userPath = Paths.get(path)
                     val chromeExecutable = Files.walk(userPath)
                         .filter { Files.isExecutable(it) }
@@ -110,7 +110,7 @@ class ChromiumLoader {
 
         fun findChromeDriver(path: String = "./chrome"): String {
             return when (Platform.currentPlatform()) {
-                Platform.Linux -> {
+                Platform.Linux, Platform.Linux_x64 -> {
                     Files.walk(Paths.get(path))
                         .filter { Files.isExecutable(it) }
                         .filter { it.fileName.name == "chromedriver" }
