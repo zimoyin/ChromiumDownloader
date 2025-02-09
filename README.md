@@ -11,9 +11,33 @@ println("下载完成")
 本程序虽然是下载，但是集成了 selenium ,所以需要使用 selenium 的时候，不需要手动引入了
 
 ```kotlin
+    println("平台: " + Platform.currentPlatform())
 val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
+runCatching {
+    ChromiumLoader.findChromeDriver().let {
+        println(it)
+        println(ChromiumLoader.getChromeDriverVersion(it))
+    }
+}
+
+runCatching {
+    ChromiumLoader.findChrome().let {
+        println(it)
+        println(ChromiumLoader.getChromeVersion(it))
+    }
+}
+// 如果不存在则去下载
 val options = ChromiumLoader.downloadAndLoad(proxy)
-val driver = ChromeDriver(options)
+// 启用无头模式
+options.addArguments("--disable-dev-shm-usage")
+options.addArguments("--ignore-ssl-errors=yes")
+options.addArguments("--ignore-certificate-errors")
+options.addArguments("--headless")
+options.addArguments("--no-sandbox")
+options.addArguments("--user-data-dir=./tmp/chrome-profile-${System.currentTimeMillis()}")
+ChromeDriver(options).use {
+    get("https://www.baidu.com")
+}
 ```
 
 ---- 

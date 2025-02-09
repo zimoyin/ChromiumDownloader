@@ -35,9 +35,13 @@ fun main() {
         }
     }
     val options = ChromiumLoader.downloadAndLoad(proxy)
-    // 启用无头模式
+    // 注意 Root 运行需要关闭沙盒
+    options.addArguments("--no-sandbox")
+    options.addArguments("--disable-dev-shm-usage")
+    options.addArguments("--ignore-ssl-errors=yes")
+    options.addArguments("--ignore-certificate-errors")
     options.addArguments("--headless")
-    options.addArguments("--user-data-dir=./tmp/chrome-profile-${System.currentTimeMillis()}") // 使用一个新的临时目录
+    options.addArguments("--user-data-dir=./tmp/chrome-profile-${System.currentTimeMillis()}")
     ChromeDriver(options).use {
         get("https://www.baidu.com")
     }
