@@ -10,6 +10,7 @@ import java.nio.file.Paths
 import kotlin.io.path.extension
 import kotlin.io.path.name
 import kotlin.jvm.optionals.getOrDefault
+import kotlin.jvm.optionals.getOrElse
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -30,7 +31,7 @@ class ChromiumLoader {
             val chromePath = kotlin.runCatching {
                 findChrome(path)
             }.getOrElse {
-                val download = ChromiumDownloader(Positioner.getLastPosition(platform,proxy), proxy, path)
+                val download = ChromiumDownloader(Positioner.getLastPosition(platform, proxy), proxy, path)
                 download.downloadChrome()
                 download.downloadChromeDriver()
                 findChrome(path)
@@ -104,7 +105,21 @@ class ChromiumLoader {
                         .toString()
                 }
 
-                else -> throw RuntimeException("Unsupported platform")
+                else -> {
+                    Files.walk(Paths.get(path))
+                        .filter { Files.isExecutable(it) }
+                        .filter { file ->
+                            val fileName = file.fileName.name
+                            fileName == "google-chrome" || fileName == "chromium" || fileName == "chrome" || fileName.contains(
+                                "chrome",
+                                ignoreCase = true
+                            )
+                        }
+                        .findFirst()
+                        .getOrElse { throw RuntimeException("Chrome executable not found in $path") }
+                        .toString()
+
+                }
             }
         }
 
@@ -137,7 +152,14 @@ class ChromiumLoader {
                         .toString()
                 }
 
-                else -> throw RuntimeException("Unsupported platform")
+                else -> {
+                    Files.walk(Paths.get(path))
+                        .filter { Files.isExecutable(it) }
+                        .filter { it.fileName.name == "chromedriver" }
+                        .findFirst()
+                        .orElseThrow { RuntimeException("chromedriver not found in $path") }
+                        .toString()
+                }
             }
         }
     }
