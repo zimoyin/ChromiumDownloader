@@ -1,9 +1,9 @@
-这是一个自动化的下次程序，可以下载最新的或者某一次修订的chromium 以及其驱动.
+这是一个自动化的下载程序，可以下载最新的或者某一次修订的chromium 以及其驱动.
 下面的代码将会下载最新版本的chromium和chromedriver到 ./chrome/修订号/ 下
 ```kotlin
 val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
-val positioner = Positioner.getLastPosition(proxy)
-val downloader = ChromiumDownloader(positioner,proxy)
+val positioner = Positioner.getLastPosition(proxy) // 获取最新版本的修订号
+val downloader = ChromiumDownloader(positioner,proxy) // 创建下载器
 downloader.downloadChrome()
 downloader.downloadChromeDriver()
 println("下载完成")
@@ -34,7 +34,6 @@ options.addArguments("--ignore-ssl-errors=yes")
 options.addArguments("--ignore-certificate-errors")
 options.addArguments("--headless")
 options.addArguments("--no-sandbox")
-options.addArguments("--user-data-dir=./tmp/chrome-profile-${System.currentTimeMillis()}")
 ChromeDriver(options).use {
     get("https://www.baidu.com")
 }

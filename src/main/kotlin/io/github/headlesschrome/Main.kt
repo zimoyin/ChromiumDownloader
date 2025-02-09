@@ -21,6 +21,7 @@ import java.net.Proxy
 fun main() {
     println("平台: " + Platform.currentPlatform())
     val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
+
     runCatching {
         ChromiumLoader.findChromeDriver().let {
             println(it)
@@ -40,9 +41,9 @@ fun main() {
     options.addArguments("--disable-dev-shm-usage")
     options.addArguments("--ignore-ssl-errors=yes")
     options.addArguments("--ignore-certificate-errors")
-    options.addArguments("--headless")
-    options.addArguments("--user-data-dir=./tmp/chrome-profile-${System.currentTimeMillis()}")
+//    options.addArguments("--headless")
     ChromeDriver(options).use {
         get("https://www.baidu.com")
+
     }
 }
