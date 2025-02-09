@@ -19,10 +19,10 @@ import kotlin.jvm.optionals.getOrNull
 class ChromiumLoader {
     companion object {
         fun downloadAndLoad(proxy: Proxy? = null, path: String = "./chrome"): ChromeOptions {
-            val download = ChromiumDownloader(Positioner.getLastPosition(), proxy, path)
             val chromePath = kotlin.runCatching {
                 findChrome(path)
             }.getOrElse {
+                val download = ChromiumDownloader(Positioner.getLastPosition(proxy), proxy, path)
                 download.downloadChrome()
                 download.downloadChromeDriver()
                 findChrome(path)
