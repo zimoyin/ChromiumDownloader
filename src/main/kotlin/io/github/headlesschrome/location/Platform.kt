@@ -49,7 +49,7 @@ enum class Platform {
         fun currentPlatform(): Platform {
             if (OS.contains("win")) return Win
             if (OS.contains("mac")) return Mac
-            if (OS.contains("linux")) return Linux
+            if (OS.contains("linux")) return Linux_x64
             return Unknown
         }
     }
