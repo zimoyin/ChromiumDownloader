@@ -18,11 +18,19 @@ import kotlin.jvm.optionals.getOrNull
  */
 class ChromiumLoader {
     companion object {
-        fun downloadAndLoad(proxy: Proxy? = null, path: String = "./chrome"): ChromeOptions {
+        /**
+         * 下载并加载Chrome,如果存在则不下载
+         */
+        @JvmOverloads
+        fun downloadAndLoad(
+            proxy: Proxy? = null,
+            path: String = "./chrome",
+            platform: Platform = Platform.currentPlatform()
+        ): ChromeOptions {
             val chromePath = kotlin.runCatching {
                 findChrome(path)
             }.getOrElse {
-                val download = ChromiumDownloader(Positioner.getLastPosition(proxy), proxy, path)
+                val download = ChromiumDownloader(Positioner.getLastPosition(platform,proxy), proxy, path)
                 download.downloadChrome()
                 download.downloadChromeDriver()
                 findChrome(path)
@@ -32,6 +40,9 @@ class ChromiumLoader {
             return ChromeOptions().setBinary(chromePath)
         }
 
+        /**
+         * 加载Chrome以及驱动
+         */
         fun load(path: String = "./chrome"): ChromeOptions {
             System.setProperty("webdriver.chrome.driver", findChromeDriver(path))
             return ChromeOptions().setBinary(findChrome(path))

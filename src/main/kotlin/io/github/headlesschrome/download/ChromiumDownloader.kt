@@ -46,18 +46,26 @@ class ChromiumDownloader(
 
     fun downloadChrome() {
         val regex = """^chrome-[a-z]+\.zip$""".toRegex()
-        download(regex, appDir)
+        try {
+            download(regex, appDir)
+        }catch (e:Exception){
+            throw RuntimeException("Unable to download chrome revision: ${positioner.revision} in platform: ${positioner.platform}",e)
+        }
     }
 
     fun downloadChromeDriver() {
         val regex = """^chromedriver_[a-zA-Z0-9]+\.zip$""".toRegex()
-        download(regex, driverDir)
+        try {
+            download(regex, driverDir)
+        }catch (e: Exception){
+            throw RuntimeException("Unable to download chrome driver revision: ${positioner.revision} in platform: ${positioner.platform}",e)
+        }
     }
 
     private fun download(regex: Regex, file: File) {
-        val item = items.first { it.name.matches(regex) }
+        val item = items.firstOrNull() { it.name.matches(regex) }?:throw NullPointerException("Unable to download File for revision because no matching files found")
         val urlStr = item.mediaLink
-        if (urlStr.isEmpty()) throw RuntimeException("Unable to download Chrome for revision because the download link was not obtained.")
+        if (urlStr.isEmpty()) throw RuntimeException("Unable to download File for revision because the download link was not obtained.")
         val url = URI.create(urlStr).toURL()
         val zip = File(file, item.name)
         url.connection(proxy).getInputStream().use { input ->
