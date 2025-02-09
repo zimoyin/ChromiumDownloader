@@ -35,15 +35,21 @@ class ChromiumLoader {
             path: String = "./chrome",
             platform: Platform = Platform.currentPlatform()
         ): ChromeOptions {
+            val download by lazy { ChromiumDownloader(Positioner.getLastPosition(platform, proxy), proxy, path) }
             val chromePath = kotlin.runCatching {
                 findChrome(path)
             }.getOrElse {
-                val download = ChromiumDownloader(Positioner.getLastPosition(platform, proxy), proxy, path)
                 download.downloadChrome()
-                download.downloadChromeDriver()
                 findChrome(path)
             }
-            val driverPath = findChromeDriver(path)
+
+            val driverPath = kotlin.runCatching {
+                findChromeDriver(path)
+            }.getOrElse {
+                download.downloadChromeDriver()
+                findChromeDriver(path)
+            }
+
             System.setProperty("webdriver.chrome.driver", driverPath)
             return ChromeOptions().setBinary(chromePath)
         }
@@ -198,9 +204,9 @@ class ChromiumLoader {
 
         fun getChromeVersion(chromePath: String = "./chrome"): String {
             val executable = if (File(chromePath).isFile) chromePath else findChrome()
-            val command = if (Platform.currentPlatform() == Platform.Win){
+            val command = if (Platform.currentPlatform() == Platform.Win) {
                 listOf("powershell", "-command", "&{(Get-Item '$executable').VersionInfo.ProductVersion}")
-            }else{
+            } else {
                 listOf(executable, "--version")
             }
             val output = executeCommand(command)
