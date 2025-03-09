@@ -17,7 +17,7 @@ import java.net.Proxy
 
 suspend fun main() {
     println("平台: " + Platform.currentPlatform())
-    val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
+//    val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
 
     runCatching {
         ChromiumLoader.findChromeDriver().let {
@@ -32,7 +32,7 @@ suspend fun main() {
             println(ChromiumLoader.getChromeVersion(it))
         }
     }
-    val options = ChromiumLoader.downloadAndLoad(proxy)
+    val options = ChromiumLoader.downloadAndLoad()
     // 注意 Root 运行需要关闭沙盒
     options.addArguments("--no-sandbox")
     options.addArguments("--disable-dev-shm-usage")
