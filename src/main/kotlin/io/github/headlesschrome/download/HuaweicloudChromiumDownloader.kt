@@ -96,10 +96,16 @@ class HuaweicloudChromiumDownloader(
         }
 
 
+        /**
+         * 获取最新 ChromeDriver 版本信息
+         */
         fun getLastChromeDriverPosition(proxy: Proxy? = null): Positioner {
             return Positioner(Platform.currentPlatform(), getChromeDriverVersions(proxy).maxOf { it.version })
         }
 
+        /**
+         * 获取所有 ChromeDriver 版本信息
+         */
         fun getChromeDriverVersions(proxy: Proxy? = null): MutableList<ChromeDriver> {
             val url = createURL(null, fileName = ".index.json", base = BASE_URL_DRIVER)
             val connection = url.connection(proxy)
