@@ -11,7 +11,7 @@ downloader.downloadChromeDriver()
 println("下载完成")
 ```
 本程序虽然是下载，但是集成了 selenium ,所以需要使用 selenium 的时候，不需要手动引入了
-
+**静态方法**
 ```kotlin
 println("平台: " + Platform.currentPlatform())
 val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
@@ -41,6 +41,7 @@ ChromeDriver(options).use {
 }
 ```
 由于 ChromeDriver 和 Chrome 在外网因此需要代理，对于没有代理的可以使用国内的镜像进行下载，这里使用的华为云的镜像（chrome 镜像最近更新为 2021）
+**实例化对象**
 ```kotlin
 // ChromiumDownloader
 // HuaweicloudChromiumDownloader
@@ -60,6 +61,13 @@ options.addArguments("--ignore-certificate-errors")
 ChromeDriver(options).blockUntilQuitSuspend {
     get("https://www.baidu.com")
 }
+```
+
+如果程序没有在你指定的位置下载 chrome 而是使用的其他位置的 chrome，你可以使用 downloader 进行下载
+```kotlin
+val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
+loader.downloader.downloadChrome()
+loader.downloader.downloadChromeDriver()
 ```
 ---- 
 已经发布到了 Maven 仓库

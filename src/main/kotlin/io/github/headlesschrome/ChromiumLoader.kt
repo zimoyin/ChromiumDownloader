@@ -15,6 +15,7 @@ import java.nio.file.attribute.PosixFilePermission
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
+import kotlin.io.path.exists
 import kotlin.io.path.extension
 import kotlin.io.path.name
 import kotlin.jvm.optionals.getOrDefault
@@ -36,12 +37,12 @@ class ChromiumLoader(
     constructor(
         path: String = "./chrome",
         platform: Platform = Platform.currentPlatform(),
-        downloader: AbsChromiumDownloader? = null
-    ) : this(null, path, platform, downloader)
+        downloader0: AbsChromiumDownloader? = null
+    ) : this(null, path, platform, downloader0)
 
     constructor(
-        downloader: AbsChromiumDownloader? = null
-    ) : this(null, "./chrome", Platform.currentPlatform(), downloader)
+        downloader0: AbsChromiumDownloader? = null
+    ) : this(null, "./chrome", Platform.currentPlatform(), downloader0)
 
     val downloader: AbsChromiumDownloader by lazy {
         downloader0 ?: ChromiumDownloader(ChromiumDownloader.getLastPosition(platform, proxy), proxy, path)
@@ -122,6 +123,7 @@ class ChromiumLoader(
                         }.filter {
                             !Files.isDirectory(it)
                         }
+                        .filter { !it.fileName.name.contains("chromedriver",true) }
                         .setPermission()
                         .findFirst()
                         .orElseGet {
@@ -144,6 +146,7 @@ class ChromiumLoader(
                             val fileName = file.fileName.name
                             fileName == "Google Chrome" || fileName.contains("chrome", ignoreCase = true)
                         }
+                        .filter { !it.fileName.name.contains("chromedriver",true) }
                         .findFirst()
                         .orElseGet {
                             val defaultPath = Paths.get("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
@@ -160,8 +163,10 @@ class ChromiumLoader(
                     Files.walk(Paths.get(path))
                         .filter { it.extension == "exe" }
                         .filter { it.fileName.name.contains("chrome", ignoreCase = true) }
+                        .filter { !it.fileName.name.contains("chromedriver",true) }
                         .findFirst()
                         .getOrDefault(Paths.get("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"))
+                        .apply { if (!this.exists()) throw RuntimeException("Chrome executable not found in $path")}
                         .toString()
                 }
 
