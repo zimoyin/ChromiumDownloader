@@ -73,6 +73,13 @@ loader.downloader.downloadChromeDriver()
 ```
 ---- 
 已经发布到了 Maven 仓库
+```xml
+<dependency>
+    <groupId>io.github.zimoyin</groupId>
+    <artifactId>ChromiumDownloader</artifactId>
+    <version>1.2.12</version>
+</dependency>
+```
 
 ## Kotlin ChromeDriver拓展方法
 * use 使用完毕后关闭浏览器
