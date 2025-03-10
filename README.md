@@ -66,6 +66,8 @@ ChromeDriver(options).blockUntilQuitSuspend {
 如果程序没有在你指定的位置下载 chrome 而是使用的其他位置的 chrome，你可以使用 downloader 进行下载
 ```kotlin
 val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
+loader.downloadAndLoad(true)
+// 或者手动下载
 loader.downloader.downloadChrome()
 loader.downloader.downloadChromeDriver()
 ```

@@ -19,7 +19,7 @@ suspend fun main() {
     // ChromiumDownloader
     // HuaweicloudChromiumDownloader
     val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
-    val options = loader.downloadAndLoad()
+    val options = loader.downloadAndLoad(true)
     println("Chrome 版本: " + loader.chromeVersion)
     println("ChromeDriver 版本: " + loader.chromeDriverVersion)
     println("Chrome 路径: " + loader.chromePath)

@@ -3,7 +3,6 @@ package io.github.headlesschrome
 import io.github.headlesschrome.download.AbsChromiumDownloader
 import io.github.headlesschrome.download.ChromiumDownloader
 import io.github.headlesschrome.location.Platform
-import io.github.headlesschrome.location.Positioner
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import java.io.File
@@ -19,8 +18,6 @@ import kotlin.io.path.exists
 import kotlin.io.path.extension
 import kotlin.io.path.name
 import kotlin.jvm.optionals.getOrDefault
-import kotlin.jvm.optionals.getOrElse
-import kotlin.jvm.optionals.getOrNull
 
 /**
  * @author : zimo
@@ -67,8 +64,9 @@ class ChromiumLoader(
         return ChromiumLoader.load(path)
     }
 
-    fun downloadAndLoad(): ChromeOptions {
-        return ChromiumLoader.downloadAndLoad(proxy, path, platform, downloader)
+    @JvmOverloads
+    fun downloadAndLoad(isPathMatchingEnabled: Boolean = true): ChromeOptions {
+        return ChromiumLoader.downloadAndLoad(proxy, path, platform, downloader,isPathMatchingEnabled)
     }
 
 
@@ -81,20 +79,25 @@ class ChromiumLoader(
             proxy: Proxy? = null,
             path: String = "./chrome",
             platform: Platform = Platform.currentPlatform(),
-            downloader: AbsChromiumDownloader? = null
+            downloader: AbsChromiumDownloader? = null,
+            isPathMatchingEnabled: Boolean = false
         ): ChromeOptions {
             val download by lazy {
                 downloader ?: ChromiumDownloader(ChromiumDownloader.getLastPosition(platform, proxy), proxy, path)
             }
             val chromePath = kotlin.runCatching {
-                findChrome(path)
+                findChrome(path).apply {
+                    if (isPathMatchingEnabled && !contains(path)) throw RuntimeException("Path $path is not in the Chrome executable path")
+                }
             }.getOrElse {
                 download.downloadChrome()
                 findChrome(path)
             }
 
             val driverPath = kotlin.runCatching {
-                findChromeDriver(path)
+                findChromeDriver(path).apply {
+                    if (isPathMatchingEnabled && !contains(path)) throw RuntimeException("Path $path is not in the Chrome driver executable path")
+                }
             }.getOrElse {
                 download.downloadChromeDriver()
                 findChromeDriver(path)

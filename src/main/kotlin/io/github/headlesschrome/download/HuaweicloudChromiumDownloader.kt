@@ -67,7 +67,6 @@ class HuaweicloudChromiumDownloader(
             }
         }
         val url = createURL(null, driverVersion, fileName, BASE_URL_DRIVER)
-        println(url)
         val zip = File(driverDir, fileName)
         url.connection(proxy).getInputStream().use { input ->
             zip.outputStream().use { output ->
