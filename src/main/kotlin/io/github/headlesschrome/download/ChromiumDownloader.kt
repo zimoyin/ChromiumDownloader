@@ -30,40 +30,55 @@ import java.net.URL
  * ```
  */
 class ChromiumDownloader(
-    val positioner: Positioner,
-    val proxy: Proxy? = null,
-    val path: String = "./chrome"
-) {
-    val rootDir = File(path).resolve(positioner.revision)
-    val appDir = rootDir.resolve("app")
-    val driverDir = rootDir.resolve("driver")
+    positioner: Positioner,
+    proxy: Proxy? = null,
+    path: String = "./chrome",
+    rootDir: File = File(path).resolve(positioner.revision),
+    appDir: File = rootDir.resolve("app"),
+    driverDir: File = rootDir.resolve("driver"),
+) : AbsChromiumDownloader(positioner, proxy, path, rootDir, appDir, driverDir) {
 
-    init {
-        rootDir.mkdirs()
-        appDir.mkdirs()
-        driverDir.mkdirs()
+    /**
+     * 获取当前平台和指定修订号的下载项列表。
+     */
+    val items: ArrayList<Item> by lazy {
+        val template =
+            "https://www.googleapis.com/storage/v1/b/chromium-browser-snapshots/o?delimiter=/&prefix=${positioner.platform.name}/${positioner.revision}/&fields=items(kind,mediaLink,metadata,name,size,updated),kind,prefixes,nextPageToken"
+        val url = URI.create(template).toURL()
+        val connection = url.connection(proxy)
+        val json = connection.inputStream.use {
+            it.readAllBytes().decodeToString()
+        }
+        parseJson(json)
     }
 
-    fun downloadChrome() {
+    override fun downloadChrome() {
         val regex = """^chrome-[a-z]+\.zip$""".toRegex()
         try {
             download(regex, appDir)
-        }catch (e:Exception){
-            throw RuntimeException("Unable to download chrome revision: ${positioner.revision} in platform: ${positioner.platform}",e)
+        } catch (e: Exception) {
+            throw RuntimeException(
+                "Unable to download chrome revision: ${positioner.revision} in platform: ${positioner.platform}",
+                e
+            )
         }
     }
 
-    fun downloadChromeDriver() {
+    override fun downloadChromeDriver() {
         val regex = """^chromedriver_[a-zA-Z0-9]+\.zip$""".toRegex()
         try {
             download(regex, driverDir)
-        }catch (e: Exception){
-            throw RuntimeException("Unable to download chrome driver revision: ${positioner.revision} in platform: ${positioner.platform}",e)
+        } catch (e: Exception) {
+            throw RuntimeException(
+                "Unable to download chrome driver revision: ${positioner.revision} in platform: ${positioner.platform}",
+                e
+            )
         }
     }
 
     private fun download(regex: Regex, file: File) {
-        val item = items.firstOrNull() { it.name.matches(regex) }?:throw NullPointerException("Unable to download File for revision because no matching files found")
+        val item = items.firstOrNull() { it.name.matches(regex) }
+            ?: throw NullPointerException("Unable to download File for revision because no matching files found")
         val urlStr = item.mediaLink
         if (urlStr.isEmpty()) throw RuntimeException("Unable to download File for revision because the download link was not obtained.")
         val url = URI.create(urlStr).toURL()
@@ -77,17 +92,6 @@ class ChromiumDownloader(
         zip.delete()
     }
 
-    val items: ArrayList<Item> by lazy {
-        val template =
-            "https://www.googleapis.com/storage/v1/b/chromium-browser-snapshots/o?delimiter=/&prefix=${positioner.platform.name}/${positioner.revision}/&fields=items(kind,mediaLink,metadata,name,size,updated),kind,prefixes,nextPageToken"
-        val url = URI.create(template).toURL()
-        val connection = url.connection(proxy)
-        val json = connection.inputStream.use {
-            it.readAllBytes().decodeToString()
-        }
-        parseJson(json)
-    }
-
     private fun parseJson(json: String): ArrayList<Item> {
         val jsonInput: JsonInput = Json().newInput(StringReader(json))
         val from = jsonInput.read<HashMap<String, ArrayList<HashMap<String, String>>>>(HashMap::class.java)
@@ -99,6 +103,9 @@ class ChromiumDownloader(
         return list
     }
 
+    /**
+     * Item 是一个数据类，用于表示一个下载项，包括媒体链接和名称。
+     */
     data class Item(
         val mediaLink: String,
         val name: String
@@ -110,9 +117,31 @@ class ChromiumDownloader(
         const val SPACE = "%2F"
         const val ALT_MEDIA = "?alt=media"
 
+
+        /**
+         * 创建一个URL，用于下载指定平台的指定修订号的文件。
+         */
         fun createURL(platform: Platform, revision: String, fileName: String = ""): URL {
             val fileName0 = if (fileName.isEmpty()) "" else "$SPACE$fileName"
-            return URI.create("$BASE_URL${platform.name}${SPACE}${revision}${fileName0}${ALT_MEDIA}").toURL()
+            return URI.create("$BASE_URL${platform.name}$SPACE${revision}${fileName0}$ALT_MEDIA")
+                .toURL()
+        }
+
+
+        fun getLastPosition(proxy: Proxy? = null): Positioner {
+            return getLastPosition(Platform.currentPlatform(), proxy)
+        }
+
+        @JvmOverloads
+        fun getLastPosition(platform: Platform = Platform.currentPlatform(), proxy: Proxy? = null): Positioner {
+            val url = ChromiumDownloader.createURL(platform, LAST_CHANGE)
+
+            // 如果提供了代理，则使用代理打开连接；否则直接打开连接
+            val connection = url.connection(proxy)
+            val revision = connection.inputStream.use {
+                it.readAllBytes().decodeToString()
+            }
+            return Positioner(platform, revision)
         }
     }
 }

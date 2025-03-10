@@ -1,5 +1,6 @@
 package io.github.headlesschrome
 
+import io.github.headlesschrome.download.AbsChromiumDownloader
 import io.github.headlesschrome.download.ChromiumDownloader
 import io.github.headlesschrome.location.Platform
 import io.github.headlesschrome.location.Positioner
@@ -24,7 +25,52 @@ import kotlin.jvm.optionals.getOrNull
  * @author : zimo
  * @date : 2025/02/08
  */
-class ChromiumLoader {
+class ChromiumLoader(
+    val proxy: Proxy? = null,
+    val path: String = "./chrome",
+    val platform: Platform = Platform.currentPlatform(),
+    private val downloader0: AbsChromiumDownloader? = null
+) {
+
+    @JvmOverloads
+    constructor(
+        path: String = "./chrome",
+        platform: Platform = Platform.currentPlatform(),
+        downloader: AbsChromiumDownloader? = null
+    ) : this(null, path, platform, downloader)
+
+    constructor(
+        downloader: AbsChromiumDownloader? = null
+    ) : this(null, "./chrome", Platform.currentPlatform(), downloader)
+
+    val downloader: AbsChromiumDownloader by lazy {
+        downloader0 ?: ChromiumDownloader(ChromiumDownloader.getLastPosition(platform, proxy), proxy, path)
+    }
+    val chromePath: String by lazy {
+        findChrome(path)
+    }
+
+    val chromeDriverPath: String by lazy {
+        findChromeDriver(path)
+    }
+
+    val chromeVersion: String by lazy {
+        getChromeVersion(chromePath)
+    }
+
+    val chromeDriverVersion: String by lazy {
+        getChromeDriverVersion(chromeDriverPath)
+    }
+
+    fun load(): ChromeOptions {
+        return ChromiumLoader.load(path)
+    }
+
+    fun downloadAndLoad(): ChromeOptions {
+        return ChromiumLoader.downloadAndLoad(proxy, path, platform, downloader)
+    }
+
+
     companion object {
         /**
          * 下载并加载Chrome,如果存在则不下载
@@ -33,9 +79,12 @@ class ChromiumLoader {
         fun downloadAndLoad(
             proxy: Proxy? = null,
             path: String = "./chrome",
-            platform: Platform = Platform.currentPlatform()
+            platform: Platform = Platform.currentPlatform(),
+            downloader: AbsChromiumDownloader? = null
         ): ChromeOptions {
-            val download by lazy { ChromiumDownloader(Positioner.getLastPosition(platform, proxy), proxy, path) }
+            val download by lazy {
+                downloader ?: ChromiumDownloader(ChromiumDownloader.getLastPosition(platform, proxy), proxy, path)
+            }
             val chromePath = kotlin.runCatching {
                 findChrome(path)
             }.getOrElse {

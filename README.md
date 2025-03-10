@@ -40,7 +40,27 @@ ChromeDriver(options).use {
     get("https://www.baidu.com")
 }
 ```
-
+由于 ChromeDriver 和 Chrome 在外网因此需要代理，对于没有代理的可以使用国内的镜像进行下载，这里使用的华为云的镜像（chrome 镜像最近更新为 2021）
+```kotlin
+// ChromiumDownloader
+// HuaweicloudChromiumDownloader
+val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
+val options = loader.downloadAndLoad()
+println("Chrome 版本: " + loader.chromeVersion)
+println("ChromeDriver 版本: " + loader.chromeDriverVersion)
+println("Chrome 路径: " + loader.chromePath)
+println("ChromeDriver 路径: " + loader.chromeDriverPath)
+println("当前平台： "+loader.platform)
+// 注意 Root 运行需要关闭沙盒
+options.addArguments("--no-sandbox")
+options.addArguments("--disable-dev-shm-usage")
+options.addArguments("--ignore-ssl-errors=yes")
+options.addArguments("--ignore-certificate-errors")
+//    options.addArguments("--headless")
+ChromeDriver(options).blockUntilQuitSuspend {
+    get("https://www.baidu.com")
+}
+```
 ---- 
 已经发布到了 Maven 仓库
 

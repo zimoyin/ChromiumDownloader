@@ -1,5 +1,7 @@
 package io.github.headlesschrome
 
+import io.github.headlesschrome.download.ChromiumDownloader
+import io.github.headlesschrome.download.HuaweicloudChromiumDownloader
 import io.github.headlesschrome.location.Platform
 import io.github.headlesschrome.utils.*
 import org.openqa.selenium.chrome.ChromeDriver
@@ -13,26 +15,16 @@ import java.net.Proxy
  * @author : zimo
  * @date : 2025/02/08
  */
-
-
 suspend fun main() {
-    println("平台: " + Platform.currentPlatform())
-//    val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 8070))
-
-    runCatching {
-        ChromiumLoader.findChromeDriver().let {
-            println(it)
-            println(ChromiumLoader.getChromeDriverVersion(it))
-        }
-    }
-
-    runCatching {
-        ChromiumLoader.findChrome().let {
-            println(it)
-            println(ChromiumLoader.getChromeVersion(it))
-        }
-    }
-    val options = ChromiumLoader.downloadAndLoad()
+    // ChromiumDownloader
+    // HuaweicloudChromiumDownloader
+    val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
+    val options = loader.downloadAndLoad()
+    println("Chrome 版本: " + loader.chromeVersion)
+    println("ChromeDriver 版本: " + loader.chromeDriverVersion)
+    println("Chrome 路径: " + loader.chromePath)
+    println("ChromeDriver 路径: " + loader.chromeDriverPath)
+    println("当前平台： "+loader.platform)
     // 注意 Root 运行需要关闭沙盒
     options.addArguments("--no-sandbox")
     options.addArguments("--disable-dev-shm-usage")
