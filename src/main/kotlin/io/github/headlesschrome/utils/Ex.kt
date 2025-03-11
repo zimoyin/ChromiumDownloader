@@ -49,6 +49,32 @@ class CWindow(
             value?.let { get(it) }
         }
 
+    fun logs(): LogEntries = aroundWindow {
+        val logEntries = driver.manage().logs().get(LogType.BROWSER)
+        return@aroundWindow logEntries
+    }
+
+    /**
+     * 监听当前窗体的控制台日志。注意需要使用 ChromeOptions.enableLoggingPrefs 后才生效
+     * @param logType 日志类型
+     * @param level 日志等级
+     * @param callback 回调
+     * @return Job 调用 cancel() 取消监听
+     */
+    inline fun logListener(
+        logType: String = LogType.BROWSER,
+        level: Level = Level.ALL,
+        crossinline callback: (LogEntry) -> Unit,
+    ): Job {
+        return CoroutineScope(Dispatchers.IO).launch {
+            while (!this@CWindow.isClose()) {
+                manage().logs().get(logType).map {
+                    if (it.level.intValue() >= level.intValue()) callback(it)
+                }
+                delay(20)
+            }
+        }
+    }
     fun setTitle(title: String?) {
         driver.executeScript("document.title = '$title';")
     }
@@ -237,9 +263,11 @@ fun ChromeDriver.onQuit(block: () -> Unit) {
 /**
  * 阻塞直到浏览器关闭
  */
-fun ChromeDriver.blockUntilQuit(block: (ChromeDriver.() -> Unit) = {}) {
+fun ChromeDriver.blockUntilQuit(block: (suspend ChromeDriver.() -> Unit) = {}) {
     this.finally()
-    block()
+    runBlocking {
+        block()
+    }
     while (!isQuit()) {
         Thread.sleep(200)
     }
@@ -281,18 +309,20 @@ inline fun ChromeDriver.logs(logType: String = LogType.BROWSER, level: Level = L
 }
 
 /**
- * 监听日志。注意需要使用 ChromeOptions.enableLoggingPrefs 后才生效
+ * 监听当前窗体的控制台日志。注意需要使用 ChromeOptions.enableLoggingPrefs 后才生效
+ * @param windowHandle 窗口句柄
  * @param logType 日志类型
  * @param level 日志等级
  * @param callback 回调
  * @return Job 调用 cancel() 取消监听
  */
 inline fun ChromeDriver.logListener(
+    windowHandle: String = this.windowHandle,
     logType: String = LogType.BROWSER,
     level: Level = Level.ALL,
     crossinline callback: (LogEntry) -> Unit,
 ): Job {
-    val cw = currentWindow
+    val cw = windows.first { it.windowHandle == windowHandle }
     return CoroutineScope(Dispatchers.IO).launch {
         while (!cw.isClose()) {
             manage().logs().get(logType).map {
