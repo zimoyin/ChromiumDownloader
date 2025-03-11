@@ -3,6 +3,7 @@ package io.github.headlesschrome
 import io.github.headlesschrome.download.AbsChromiumDownloader
 import io.github.headlesschrome.download.ChromiumDownloader
 import io.github.headlesschrome.location.Platform
+import kotlinx.coroutines.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import java.io.File
@@ -27,18 +28,18 @@ class ChromiumLoader(
     val proxy: Proxy? = null,
     val path: String = "./chrome",
     val platform: Platform = Platform.currentPlatform(),
-    private val downloader0: AbsChromiumDownloader? = null
+    private val downloader0: AbsChromiumDownloader? = null,
 ) {
 
     @JvmOverloads
     constructor(
         path: String = "./chrome",
         platform: Platform = Platform.currentPlatform(),
-        downloader0: AbsChromiumDownloader? = null
+        downloader0: AbsChromiumDownloader? = null,
     ) : this(null, path, platform, downloader0)
 
     constructor(
-        downloader0: AbsChromiumDownloader? = null
+        downloader0: AbsChromiumDownloader? = null,
     ) : this(null, "./chrome", Platform.currentPlatform(), downloader0)
 
     val downloader: AbsChromiumDownloader by lazy {
@@ -81,35 +82,39 @@ class ChromiumLoader(
             path: String = "./chrome",
             platform: Platform = Platform.currentPlatform(),
             downloader: AbsChromiumDownloader? = null,
-            isPathMatchingEnabled: Boolean = false
-        ): ChromeOptions {
-            val download by lazy {
+            isPathMatchingEnabled: Boolean = false,
+        ): ChromeOptions = runBlocking(Dispatchers.IO) {
+            val download = async {
                 downloader ?: ChromiumDownloader(ChromiumDownloader.getLastPosition(platform, proxy), proxy, path)
             }
-            val chromePath = kotlin.runCatching {
-                findChrome(path).apply {
-                    val chromeFile = File(this).canonicalFile.path
-                    val targetFile = File(path).canonicalFile.path
-                    if (isPathMatchingEnabled && !chromeFile.contains(targetFile)) throw RuntimeException("Path $path is not in the Chrome executable path")
+            val chromePath = async {
+                kotlin.runCatching {
+                    findChrome(path).apply {
+                        val chromeFile = File(this).canonicalFile.path
+                        val targetFile = File(path).canonicalFile.path
+                        if (isPathMatchingEnabled && !chromeFile.startsWith(targetFile)) throw RuntimeException("Path $path is not in the Chrome executable path")
+                    }
+                }.getOrElse {
+                    download.await().downloadChrome()
+                    findChrome(path)
                 }
-            }.getOrElse {
-                download.downloadChrome()
-                findChrome(path)
             }
 
-            val driverPath = kotlin.runCatching {
-                findChromeDriver(path).apply {
-                    val chromeFile = File(this).canonicalFile.path
-                    val targetFile = File(path).canonicalFile.path
-                    if (isPathMatchingEnabled && !chromeFile.contains(targetFile)) throw RuntimeException("Path $path is not in the Chrome Driver executable path")
+            val driverPath = async {
+                kotlin.runCatching {
+                    findChromeDriver(path).apply {
+                        val chromeFile = File(this).canonicalFile.path
+                        val targetFile = File(path).canonicalFile.path
+                        if (isPathMatchingEnabled && !chromeFile.startsWith(targetFile)) throw RuntimeException("Path $path is not in the Chrome Driver executable path")
+                    }
+                }.getOrElse {
+                    download.await().downloadChromeDriver()
+                    findChromeDriver(path)
                 }
-            }.getOrElse {
-                download.downloadChromeDriver()
-                findChromeDriver(path)
             }
 
-            System.setProperty("webdriver.chrome.driver", driverPath)
-            return ChromeOptions().setBinary(chromePath)
+            System.setProperty("webdriver.chrome.driver", driverPath.await())
+            return@runBlocking ChromeOptions().setBinary(chromePath.await())
         }
 
         /**
