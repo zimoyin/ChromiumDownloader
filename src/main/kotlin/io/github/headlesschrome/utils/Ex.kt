@@ -59,6 +59,7 @@ fun ChromeDriver.onQuit(block: () -> Unit) {
  * 阻塞直到浏览器关闭
  */
 fun ChromeDriver.blockUntilQuit(block: (ChromeDriver.() -> Unit) = {}) {
+    this.finally()
     block()
     while (!isQuit()) {
         Thread.sleep(200)
@@ -69,6 +70,7 @@ fun ChromeDriver.blockUntilQuit(block: (ChromeDriver.() -> Unit) = {}) {
  * 阻塞直到浏览器关闭
  */
 suspend fun ChromeDriver.blockUntilQuitSuspend(block: (suspend ChromeDriver.() -> Unit) = {}) {
+    this.finally()
     block()
     while (!isQuit()) {
         delay(200)
