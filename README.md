@@ -90,3 +90,41 @@ loader.downloader.downloadChromeDriver()
 * finally JVM 关闭时退出浏览器
 * screenshotAsFile 报错截图到文件
 * screenshot 截图并返回指定类型（可以返回绝大部分类型）
+* deleteWebDriverSign 通过覆盖 `navigator.webdriver` 属性隐藏自动化特征
+* currentWindow 返回当前Tap或者Window 的封装
+* windows 返回所有窗口的封装（封装的窗口对象可以不切换到窗口就可进行操作）
+* logListener 添加浏览器标签页日志监听
+* logs 返回日志
+
+## Kotlin ChromeOptions 拓展方法
+* **enableLoggingPrefs** 启用日志
+* **enableNoSandbox** 启用无沙盒模式（添加 `--no-sandbox` 参数）
+* **enableHeadless** 启用无头模式（添加 `--headless` 参数）
+* **enableDisableInfobars** 禁用自动化提示信息栏（移除"Chrome正受到自动测试软件的控制"提示）
+* **enableIncognito** 启用无痕模式（添加 `--incognito` 参数）
+* **enableDisableGpu** 禁用GPU加速（添加 `--disable-gpu` 参数）
+* **enableAllowRunningInsecureContent** 允许加载不安全内容（如直接访问HTTP网站）
+* **enableDisableImage** 禁用图片加载（通过参数和偏好设置双重控制）
+* **enableDisableCss** <span style="color:red">(已弃用)</span> 禁用CSS渲染
+* **addPreference** 添加浏览器偏好设置（用于配置下载路径、内容拦截等高级设置）
+* **enableDisableJavaScript** 禁用JavaScript执行
+* **enableIgnoreSslErrors** 忽略SSL证书错误（允许访问自签名证书网站）
+* **setWindowSize** 设置浏览器窗口尺寸（参数：宽度和高度）
+* **setProxyServer** 配置代理服务器（参数格式：`host:port`）
+* **disableSetuidSandbox** 禁用setuid沙盒机制
+* **disableDevShmUsage** 禁用`/dev/shm`内存共享（解决Docker容器内存不足问题）
+* **setUserProfileDir** 指定自定义用户数据目录（参数：绝对路径）
+* **disableDefaultBrowserCheck** 禁用默认浏览器检测
+* **disablePopupBlocking** 允许所有弹窗
+* **disableExtensions** 禁用所有浏览器扩展
+* **disableFirstRun** 跳过首次运行初始化
+* **startMaximized** 启动时窗口最大化
+* **disableNotifications** 禁用浏览器通知
+* **enableAutomation** 显式启用自动化模式（与反检测机制冲突时使用）
+* **disableXssAuditor** 禁用XSS防护机制
+* **disableWebSecurity** 关闭同源策略（允许跨域请求）
+* **disableWebGL** 禁用WebGL渲染
+* **setHomeDir** 指定浏览器主目录路径
+* **setDiskCacheDir** 自定义磁盘缓存目录
+* **disableCache** 完全禁用浏览器缓存
+* **excludeSwitches** 排除特定启动参数（参数：可变参数列表）

@@ -72,7 +72,6 @@ class ChromiumLoader(
 
 
     companion object {
-
         /**
          * 下载并加载Chrome,如果存在则不下载
          */

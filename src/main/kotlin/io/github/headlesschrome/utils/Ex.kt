@@ -1,13 +1,14 @@
 package io.github.headlesschrome.utils
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.intellij.lang.annotations.Language
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.logging.LogEntries
+import org.openqa.selenium.logging.LogEntry
+import org.openqa.selenium.logging.LogType
+import org.openqa.selenium.logging.LoggingPreferences
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -16,6 +17,7 @@ import java.net.URI
 import java.net.URL
 import java.nio.file.Path
 import java.util.Base64
+import java.util.logging.Level
 import javax.imageio.ImageIO
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -268,6 +270,37 @@ inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
 
 inline fun ChromeDriver.screenshotAsFile(path: String? = null): File {
     return screenshot<File>().let { if (path != null) it.copyTo(File(path), true) else it }
+}
+
+
+/**
+ * 获取日志
+ */
+inline fun ChromeDriver.logs(logType: String = LogType.BROWSER, level: Level = Level.ALL): List<LogEntry> {
+    return manage().logs().get(logType).filter { it.level.intValue() >= level.intValue() }
+}
+
+/**
+ * 监听日志。注意需要使用 ChromeOptions.enableLoggingPrefs 后才生效
+ * @param logType 日志类型
+ * @param level 日志等级
+ * @param callback 回调
+ * @return Job 调用 cancel() 取消监听
+ */
+inline fun ChromeDriver.logListener(
+    logType: String = LogType.BROWSER,
+    level: Level = Level.ALL,
+    crossinline callback: (LogEntry) -> Unit,
+): Job {
+    val cw = currentWindow
+    return CoroutineScope(Dispatchers.IO).launch {
+        while (!cw.isClose()) {
+            manage().logs().get(logType).map {
+                if (it.level.intValue() >= level.intValue()) callback(it)
+            }
+            delay(20)
+        }
+    }
 }
 
 /**
@@ -598,3 +631,15 @@ fun ChromeOptions.excludeSwitches(vararg switches: String): ChromeOptions {
     return this
 }
 
+/**
+ * 启用日志记录
+ */
+fun ChromeOptions.enableLoggingPrefs(
+    loggingPrefs: LoggingPreferences = LoggingPreferences().apply {
+        enable(LogType.BROWSER, Level.ALL)
+        enable(LogType.DRIVER, Level.WARNING)
+    },
+): ChromeOptions {
+    setCapability("goog:loggingPrefs", loggingPrefs)
+    return this
+}
