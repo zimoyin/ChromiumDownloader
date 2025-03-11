@@ -4,6 +4,7 @@ import io.github.headlesschrome.ChromiumLoader
 import io.github.headlesschrome.download.ChromiumDownloader
 import io.github.headlesschrome.utils.*
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.devtools.v131.performance.Performance
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -32,6 +33,8 @@ suspend fun main() {
 
 //    options.enableHeadless()
     ChromeDriver(options).blockUntilQuitSuspend {
+        devTools.createSession()
+
         get("https://www.bilibili.com/video/BV1Jd9RYaEuz/?spm_id_from=333.1007.tianma.1-1-1.click")
         println(title)
         logListener {

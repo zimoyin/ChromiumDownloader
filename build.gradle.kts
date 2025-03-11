@@ -7,7 +7,7 @@ plugins {
 
 description = "Chromium Downloader"
 group = "io.github.zimoyin"
-version = "1.2.12"
+version = "1.2.20"
 
 repositories {
     mavenCentral()
@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("org.seleniumhq.selenium:selenium-java:4.28.1")
+    implementation("org.seleniumhq.selenium:selenium-java:4.29.0")
     implementation("com.google.guava:guava:33.4.0-jre")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 }
