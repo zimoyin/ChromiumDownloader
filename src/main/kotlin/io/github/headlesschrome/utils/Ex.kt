@@ -668,6 +668,10 @@ fun ChromeOptions.enableLoggingPrefs(
     loggingPrefs: LoggingPreferences = LoggingPreferences().apply {
         enable(LogType.BROWSER, Level.ALL)
         enable(LogType.DRIVER, Level.WARNING)
+        enable(LogType.PERFORMANCE, Level.INFO)
+        enable(LogType.PROFILER, Level.INFO)
+        enable(LogType.SERVER, Level.INFO)
+        enable(LogType.CLIENT, Level.INFO)
     },
 ): ChromeOptions {
     setCapability("goog:loggingPrefs", loggingPrefs)

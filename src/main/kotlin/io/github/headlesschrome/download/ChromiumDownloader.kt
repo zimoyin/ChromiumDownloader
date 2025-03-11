@@ -8,6 +8,7 @@ import org.openqa.selenium.json.Json
 import org.openqa.selenium.json.JsonInput
 import java.io.File
 import java.io.StringReader
+import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URI
 import java.net.URL
@@ -30,13 +31,15 @@ import java.net.URL
  * ```
  */
 class ChromiumDownloader(
-    positioner: Positioner,
     proxy: Proxy? = null,
+    positioner: Positioner = getLastPosition(proxy),
     path: String = "./chrome",
     rootDir: File = File(path).resolve(positioner.revision),
     appDir: File = rootDir.resolve("app"),
     driverDir: File = rootDir.resolve("driver"),
 ) : AbsChromiumDownloader(positioner, proxy, path, rootDir, appDir, driverDir) {
+
+    constructor(host:String, port:Int) : this(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, port)))
 
     /**
      * 获取当前平台和指定修订号的下载项列表。

@@ -1,14 +1,11 @@
-package io.github.headlesschrome
+package io.github.zimoyin
 
+import io.github.headlesschrome.ChromiumLoader
 import io.github.headlesschrome.download.ChromiumDownloader
-import io.github.headlesschrome.download.HuaweicloudChromiumDownloader
-import io.github.headlesschrome.location.Platform
 import io.github.headlesschrome.utils.*
 import org.openqa.selenium.chrome.ChromeDriver
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.net.InetSocketAddress
-import java.net.Proxy
 
 /**
  *
@@ -18,21 +15,28 @@ import java.net.Proxy
 suspend fun main() {
     // ChromiumDownloader
     // HuaweicloudChromiumDownloader
-    val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
+//    val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
+    val loader = ChromiumLoader(ChromiumDownloader("127.0.0.1",8070))
     val options = loader.downloadAndLoad(true)
     println("Chrome 版本: " + loader.chromeVersion)
     println("ChromeDriver 版本: " + loader.chromeDriverVersion)
     println("Chrome 路径: " + loader.chromePath)
     println("ChromeDriver 路径: " + loader.chromeDriverPath)
-    println("当前平台： "+loader.platform)
+    println("当前平台： " + loader.platform)
     // 注意 Root 运行需要关闭沙盒
-    options.addArguments("--no-sandbox")
-    options.addArguments("--disable-dev-shm-usage")
-    options.addArguments("--ignore-ssl-errors=yes")
-    options.addArguments("--ignore-certificate-errors")
-//    options.addArguments("--headless")
+    options.enableNoSandbox()
+    options.enableDisableInfobars()
+    options.enableDisableCss()
+    options.enableIgnoreSslErrors()
+    options.enableLoggingPrefs()
+
+//    options.enableHeadless()
     ChromeDriver(options).blockUntilQuitSuspend {
-        get("https://www.baidu.com")
+        get("https://www.bilibili.com/video/BV1Jd9RYaEuz/?spm_id_from=333.1007.tianma.1-1-1.click")
+        println(title)
+        logListener {
+            println(it)
+        }
     }
 }
 
@@ -44,7 +48,12 @@ fun _isChromeOrChromiumProcessExists(): Boolean {
     val os = System.getProperty("os.name").lowercase()
     val command = when {
         os.contains("win") -> listOf("cmd.exe", "/c", "tasklist")
-        os.contains("nix") || os.contains("mac") -> listOf("sh", "-c", "ps aux | grep -Ei 'chrome|chromium' | grep -v grep")
+        os.contains("nix") || os.contains("mac") -> listOf(
+            "sh",
+            "-c",
+            "ps aux | grep -Ei 'chrome|chromium' | grep -v grep"
+        )
+
         else -> throw UnsupportedOperationException("Unsupported OS: $os")
     }
 

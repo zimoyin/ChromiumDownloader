@@ -25,10 +25,10 @@ import kotlin.jvm.optionals.getOrDefault
  * @date : 2025/02/08
  */
 class ChromiumLoader(
-    val proxy: Proxy? = null,
     val path: String = "./chrome",
     val platform: Platform = Platform.currentPlatform(),
     private val downloader0: AbsChromiumDownloader? = null,
+    private val proxy: Proxy? = downloader0?.proxy,
 ) {
 
     @JvmOverloads
@@ -36,14 +36,14 @@ class ChromiumLoader(
         path: String = "./chrome",
         platform: Platform = Platform.currentPlatform(),
         downloader0: AbsChromiumDownloader? = null,
-    ) : this(null, path, platform, downloader0)
+    ) : this( path, platform, downloader0, downloader0?.proxy)
 
     constructor(
         downloader0: AbsChromiumDownloader? = null,
-    ) : this(null, "./chrome", Platform.currentPlatform(), downloader0)
+    ) : this( "./chrome", Platform.currentPlatform(), downloader0)
 
     val downloader: AbsChromiumDownloader by lazy {
-        downloader0 ?: ChromiumDownloader(ChromiumDownloader.getLastPosition(platform, proxy), proxy, path)
+        downloader0 ?: ChromiumDownloader(proxy, ChromiumDownloader.getLastPosition(platform, proxy), path)
     }
     val chromePath: String by lazy {
         findChrome(path)
@@ -84,7 +84,7 @@ class ChromiumLoader(
             isPathMatchingEnabled: Boolean = false,
         ): ChromeOptions = runBlocking(Dispatchers.IO) {
             val download = async {
-                downloader ?: ChromiumDownloader(ChromiumDownloader.getLastPosition(platform, proxy), proxy, path)
+                downloader ?: ChromiumDownloader(proxy, ChromiumDownloader.getLastPosition(platform, proxy), path)
             }
             val chromePath = async {
                 kotlin.runCatching {
