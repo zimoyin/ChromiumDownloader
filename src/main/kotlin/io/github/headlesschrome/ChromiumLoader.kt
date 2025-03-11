@@ -66,11 +66,12 @@ class ChromiumLoader(
 
     @JvmOverloads
     fun downloadAndLoad(isPathMatchingEnabled: Boolean = true): ChromeOptions {
-        return ChromiumLoader.downloadAndLoad(proxy, path, platform, downloader,isPathMatchingEnabled)
+        return ChromiumLoader.downloadAndLoad(proxy, path, platform, downloader, isPathMatchingEnabled)
     }
 
 
     companion object {
+
         /**
          * 下载并加载Chrome,如果存在则不下载
          */
@@ -87,7 +88,9 @@ class ChromiumLoader(
             }
             val chromePath = kotlin.runCatching {
                 findChrome(path).apply {
-                    if (isPathMatchingEnabled && !contains(path)) throw RuntimeException("Path $path is not in the Chrome executable path")
+                    val chromeFile = File(this).canonicalFile.path
+                    val targetFile = File(path).canonicalFile.path
+                    if (isPathMatchingEnabled && !chromeFile.contains(targetFile)) throw RuntimeException("Path $path is not in the Chrome executable path")
                 }
             }.getOrElse {
                 download.downloadChrome()
@@ -96,7 +99,9 @@ class ChromiumLoader(
 
             val driverPath = kotlin.runCatching {
                 findChromeDriver(path).apply {
-                    if (isPathMatchingEnabled && !contains(path)) throw RuntimeException("Path $path is not in the Chrome driver executable path")
+                    val chromeFile = File(this).canonicalFile.path
+                    val targetFile = File(path).canonicalFile.path
+                    if (isPathMatchingEnabled && !chromeFile.contains(targetFile)) throw RuntimeException("Path $path is not in the Chrome Driver executable path")
                 }
             }.getOrElse {
                 download.downloadChromeDriver()
@@ -126,7 +131,7 @@ class ChromiumLoader(
                         }.filter {
                             !Files.isDirectory(it)
                         }
-                        .filter { !it.fileName.name.contains("chromedriver",true) }
+                        .filter { !it.fileName.name.contains("chromedriver", true) }
                         .setPermission()
                         .findFirst()
                         .orElseGet {
@@ -149,7 +154,7 @@ class ChromiumLoader(
                             val fileName = file.fileName.name
                             fileName == "Google Chrome" || fileName.contains("chrome", ignoreCase = true)
                         }
-                        .filter { !it.fileName.name.contains("chromedriver",true) }
+                        .filter { !it.fileName.name.contains("chromedriver", true) }
                         .findFirst()
                         .orElseGet {
                             val defaultPath = Paths.get("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
@@ -166,10 +171,10 @@ class ChromiumLoader(
                     Files.walk(Paths.get(path))
                         .filter { it.extension == "exe" }
                         .filter { it.fileName.name.contains("chrome", ignoreCase = true) }
-                        .filter { !it.fileName.name.contains("chromedriver",true) }
+                        .filter { !it.fileName.name.contains("chromedriver", true) }
                         .findFirst()
                         .getOrDefault(Paths.get("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"))
-                        .apply { if (!this.exists()) throw RuntimeException("Chrome executable not found in $path")}
+                        .apply { if (!this.exists()) throw RuntimeException("Chrome executable not found in $path") }
                         .toString()
                 }
 
