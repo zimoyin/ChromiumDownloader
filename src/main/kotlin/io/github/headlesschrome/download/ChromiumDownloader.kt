@@ -39,7 +39,17 @@ class ChromiumDownloader(
     driverDir: File = rootDir.resolve("driver"),
 ) : AbsChromiumDownloader(positioner, proxy, path, rootDir, appDir, driverDir) {
 
-    constructor(host:String, port:Int) : this(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, port)))
+    constructor(host: String, port: Int) : this(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, port)))
+    constructor(
+        host: String,
+        port: Int,
+        positioner: Positioner = getLastPosition(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, port))),
+        path: String = "./chrome",
+        rootDir: File = File(path).resolve(positioner.revision),
+        appDir: File = rootDir.resolve("app"),
+        driverDir: File = rootDir.resolve("driver"),
+    ) : this(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, port)), positioner, path, rootDir, appDir, driverDir)
+
 
     /**
      * 获取当前平台和指定修订号的下载项列表。
@@ -111,7 +121,7 @@ class ChromiumDownloader(
      */
     data class Item(
         val mediaLink: String,
-        val name: String
+        val name: String,
     )
 
     companion object {
