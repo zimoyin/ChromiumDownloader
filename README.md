@@ -81,6 +81,9 @@ loader.downloader.downloadChromeDriver()
 </dependency>
 ```
 
+## ChromiumEx 类
+该类是用于将 Kotlin ChromeDriver 拓展方法封装到一个类中方便 Java 使用
+
 ## Kotlin ChromeDriver拓展方法
 * use 使用完毕后关闭浏览器
 * isQuit 是否退出
@@ -95,6 +98,8 @@ loader.downloader.downloadChromeDriver()
 * windows 返回所有窗口的封装（封装的窗口对象可以不切换到窗口就可进行操作）
 * logListener 添加浏览器标签页日志监听
 * logs 返回日志
+* load 加载网页文件或者加载网页源码
+* get 各种重载
 
 ## Kotlin ChromeOptions 拓展方法
 * **enableLoggingPrefs** 启用日志

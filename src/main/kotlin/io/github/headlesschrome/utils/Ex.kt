@@ -28,14 +28,28 @@ val ChromeDriver.currentWindow: CWindow
 val ChromeDriver.windows: List<CWindow>
     get() = this.windowHandles.map { it -> CWindow(this, it) }
 
-class CWindow(
-    val driver: ChromeDriver,
+open class CWindow(
+    open val driver: ChromeDriver,
     private val windowHandleID: String,
 ) : WebDriver {
     init {
+        deleteWebDriverSign()
+    }
+
+    fun deleteWebDriverSign() {
         driver.deleteWebDriverSign()
     }
 
+    val currentWindowHandle: String
+        get() = driver.windowHandle
+
+    val windows: List<CWindow>
+        get() = driver.windows
+    val currentWindow: CWindow
+        get() = driver.currentWindow
+
+    val targetLocator: WebDriver.TargetLocator
+        get() = driver.switchTo()
 
     var size: Dimension
         get() = aroundWindow { driver.manage().window().size }
@@ -61,6 +75,7 @@ class CWindow(
      * @param callback 回调
      * @return Job 调用 cancel() 取消监听
      */
+    @JvmSynthetic
     inline fun logListener(
         logType: String = LogType.BROWSER,
         level: Level = Level.ALL,
@@ -75,6 +90,7 @@ class CWindow(
             }
         }
     }
+
     fun setTitle(title: String?) {
         driver.executeScript("document.title = '$title';")
     }
@@ -112,8 +128,31 @@ class CWindow(
         return@aroundWindow driver.network()
     }
 
+    /**
+     * switchTo() 是 Selenium 中用于切换操作上下文的核心方法，返回一个 TargetLocator 对象。
+     * 这里直接切换到当前窗口，并返回一个 TargetLocator 对象。
+     * 如果想要返回一个 TargetLocator 对象，调用 targetLocator 属性即可
+     */
+    @Deprecated("use targetLocator instead")
     override fun switchTo(): WebDriver.TargetLocator = aroundWindow {
+        switchToThis()
         return@aroundWindow driver.switchTo()
+    }
+
+    /**
+     * 切换到指定窗口
+     */
+    fun switchTo(windown: CWindow): CWindow {
+        driver.switchTo().window(windown.windowHandleID)
+        return currentWindow
+    }
+
+    /**
+     * 切换到指定窗口
+     */
+    fun switchTo(windowHandle: String): CWindow {
+        driver.switchTo().window(windowHandle)
+        return currentWindow
     }
 
     override fun navigate(): WebDriver.Navigation = aroundWindow {
@@ -126,6 +165,7 @@ class CWindow(
 
     fun back() = aroundWindow {
         driver.navigate().back()
+        return@aroundWindow this
     }
 
     fun forward() = aroundWindow {
@@ -138,6 +178,71 @@ class CWindow(
 
     override fun get(url: String) = aroundWindow {
         driver.get(url)
+    }
+
+    @JvmOverloads
+    fun get(url: String? = "about:blank", isNewTab: Boolean = false): CWindow = aroundWindow {
+        if (isNewTab) newTab().switchToThis()
+        get(url ?: "about:blank")
+        return@aroundWindow this
+    }
+    @JvmOverloads
+    fun get(url: URL, isNewTab: Boolean = false): CWindow = aroundWindow {
+        get(url.toString(), isNewTab)
+        return@aroundWindow this
+    }
+    @JvmOverloads
+    fun get(file: File, isNewTab: Boolean = false): CWindow = aroundWindow {
+        get(file.toURI().toURL().toString(), isNewTab)
+        return@aroundWindow this
+    }
+    @JvmOverloads
+    fun get(url: URI, isNewTab: Boolean = false): CWindow = aroundWindow {
+        get(url.toURL(), isNewTab)
+        return@aroundWindow this
+    }
+
+    /**
+     * 加载 HTML
+     */
+    @JvmOverloads
+    fun load(@Language("html") html: String, isNewTab: Boolean = false): CWindow = aroundWindow {
+        if (isNewTab) newTab().switchToThis()
+        println(this)
+        // 打开一个空白页面
+        get("about:blank")
+        // 通过 JavaScript 注入 HTML
+        executeScript("document.body.innerHTML = arguments[0];", html)
+        return@aroundWindow this
+    }
+
+    @JvmOverloads
+    fun load(file: File, isNewTab: Boolean = false): CWindow = aroundWindow {
+        get(file, isNewTab)
+        return@aroundWindow this
+    }
+
+    @JvmOverloads
+    fun load(url: URL, isNewTab: Boolean = false): CWindow = aroundWindow {
+        get(url, isNewTab)
+        return@aroundWindow this
+    }
+
+    @JvmOverloads
+    fun load(url: URI, isNewTab: Boolean = false): CWindow = aroundWindow {
+        get(url, isNewTab)
+        return@aroundWindow this
+    }
+
+    fun loadCss(@Language("css") css: String): CWindow = aroundWindow {
+        executeScript(
+            """
+        const style = document.createElement('style');
+        style.textContent = arguments[0];
+        document.head.appendChild(style);
+    """, css
+        )
+        return@aroundWindow this
     }
 
     override fun getCurrentUrl(): String? = aroundWindow {
@@ -168,18 +273,19 @@ class CWindow(
         return@aroundWindow driver.screenshot<T>()
     }
 
+    @JvmOverloads
     fun newWindow(url: String? = currentUrl) = aroundWindow {
         driver.switchTo().window(windowHandleID)
         driver.switchTo().newWindow(WindowType.WINDOW).let {
-            url?.let { it1 -> it.get(it1) }
+            if (url == null) it.get("about:blank") else it.get(url)
             CWindow(it as ChromeDriver, it.windowHandle)
         }
     }
 
+    @JvmOverloads
     fun newTab(url: String? = currentUrl) = aroundWindow {
-        driver.switchTo().window(windowHandleID)
         driver.switchTo().newWindow(WindowType.TAB).let {
-            url?.let { it1 -> it.get(it1) }
+            if (url == null) it.get("about:blank") else it.get(url)
             CWindow(it as ChromeDriver, it.windowHandle)
         }
     }
@@ -207,19 +313,58 @@ class CWindow(
         driver.quit()
     }
 
+    @JvmSynthetic
+    fun onQuit(block: suspend () -> Unit) {
+        driver.onQuit(block)
+    }
+
+    @JvmSynthetic
+    fun onClose(block: suspend () -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            while (!isClose()) {
+                delay(200)
+            }
+            block()
+        }
+    }
+
     override fun getWindowHandles(): MutableSet<String> {
         return driver.windowHandles
     }
 
-    override fun getWindowHandle(): String = aroundWindow {
-        return@aroundWindow driver.windowHandle
+    override fun getWindowHandle(): String = windowHandleID
+
+    fun <T> aroundWindow(currentWindowId: String = currentWindowHandle, block: CWindow.() -> T): T {
+        if (driver.windowHandles.contains(currentWindowId)) {
+            driver.switchTo().window(windowHandleID)
+        }
+        val result = kotlin.runCatching { block() }
+        if (driver.windowHandles.contains(currentWindowId)) {
+            driver.switchTo().window(currentWindowId)
+        }
+        return result.getOrThrow()
     }
 
-    fun <T> aroundWindow(currentWindow: String = driver.windowHandle, block: CWindow.() -> T): T {
-        driver.switchTo().window(windowHandleID)
-        val result = kotlin.runCatching { block() }
-        if (driver.windowHandles.contains(currentWindow)) driver.switchTo().window(currentWindow)
-        return result.getOrThrow()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CWindow
+
+        if (driver != other.driver) return false
+        if (windowHandleID != other.windowHandleID) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = driver.hashCode()
+        result = 31 * result + windowHandleID.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return windowHandleID
     }
 }
 
@@ -251,7 +396,7 @@ inline fun ChromeDriver.isQuit(): Boolean {
 /**
  * 浏览器关闭后执行
  */
-fun ChromeDriver.onQuit(block: () -> Unit) {
+fun ChromeDriver.onQuit(block: suspend () -> Unit) {
     CoroutineScope(Dispatchers.IO).launch {
         while (!isQuit()) {
             delay(200)
@@ -331,6 +476,68 @@ inline fun ChromeDriver.logListener(
             delay(20)
         }
     }
+}
+
+/**
+ * 打开指定连接，如果没有则打开空窗体
+ */
+inline fun ChromeDriver.get(url: String? = "about:blank", isNewTab: Boolean = false): CWindow {
+    if (isNewTab) this.currentWindow.newTab().switchToThis()
+    get(url ?: "about:blank")
+    return currentWindow
+}
+
+inline fun ChromeDriver.get(url: URL, isNewTab: Boolean = false): CWindow {
+    get(url.toString(), isNewTab)
+    return currentWindow
+}
+
+inline fun ChromeDriver.get(file: File, isNewTab: Boolean = false): CWindow {
+    get(file.toURI().toURL().toString(), isNewTab)
+    return currentWindow
+}
+
+inline fun ChromeDriver.get(url: URI, isNewTab: Boolean = false): CWindow {
+    get(url.toURL(), isNewTab)
+    return currentWindow
+}
+
+/**
+ * 加载 HTML
+ */
+inline fun ChromeDriver.load(@Language("html") html: String, isNewTab: Boolean = false): CWindow {
+    if (isNewTab) this.currentWindow.newTab().switchToThis()
+    // 打开一个空白页面
+    get("about:blank")
+    // 通过 JavaScript 注入 HTML
+    executeScript("document.body.innerHTML = arguments[0];", html)
+    return currentWindow
+}
+
+inline fun ChromeDriver.load(file: File, isNewTab: Boolean = false): CWindow {
+    get(file, isNewTab)
+    return currentWindow
+}
+
+inline fun ChromeDriver.load(url: URL, isNewTab: Boolean = false): CWindow {
+    get(url, isNewTab)
+    return currentWindow
+}
+
+inline fun ChromeDriver.load(url: URI, isNewTab: Boolean = false): CWindow {
+    get(url, isNewTab)
+    return currentWindow
+}
+
+inline fun ChromeDriver.loadCss(@Language("css") css: String): CWindow {
+    executeScript(
+        """
+        const style = document.createElement('style');
+        style.textContent = arguments[0];
+        document.head.appendChild(style);
+    """, css
+    )
+    return currentWindow
 }
 
 /**
