@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.logging.LogEntry
 import org.openqa.selenium.logging.LogType
 import org.openqa.selenium.logging.LoggingPreferences
@@ -66,6 +67,25 @@ class ChromiumEx(
         }
     }
 
+    /**
+     * 监听窗口创建
+     */
+    fun onCreateWindow(c: Consumer<CWindow>): Job = driver.onCreateWindow {
+        c.accept(this)
+    }
+
+    /**
+     * 创建 Actions 用于模拟鼠标键盘操作。只针对当前窗口，如果在操作过程中出现窗口切换会导致操作失误
+     */
+    fun actions(c: Consumer<Actions>): Unit = actions {
+        c.accept(Actions(it, this))
+    }
+
+    class Actions(
+        val actions: org.openqa.selenium.interactions.Actions,
+        val window: CWindow,
+    )
+
     companion object {
         /**
          * 启用日志监听
@@ -83,6 +103,13 @@ class ChromiumEx(
             },
         ) {
             chromeOptions.setCapability("goog:loggingPrefs", loggingPrefs)
+        }
+
+        /**
+         * 监听窗口创建
+         */
+        fun onCreateWindow(driver: ChromeDriver, c: Consumer<CWindow>): Job = driver.onCreateWindow {
+            c.accept(this)
         }
     }
 }

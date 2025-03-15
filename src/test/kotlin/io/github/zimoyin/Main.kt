@@ -3,10 +3,13 @@ package io.github.zimoyin
 import io.github.headlesschrome.ChromiumLoader
 import io.github.headlesschrome.download.ChromiumDownloader
 import io.github.headlesschrome.utils.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.devtools.v131.performance.Performance
+import org.openqa.selenium.support.ui.WebDriverWait
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
 
 /**
@@ -18,7 +21,7 @@ suspend fun main() {
     // ChromiumDownloader
     // HuaweicloudChromiumDownloader
 //    val loader = ChromiumLoader(HuaweicloudChromiumDownloader())
-    val loader = ChromiumLoader(ChromiumDownloader("127.0.0.1",8070))
+    val loader = ChromiumLoader(ChromiumDownloader("127.0.0.1", 8070))
     val options = loader.downloadAndLoad(true)
     println("Chrome 版本: " + loader.chromeVersion)
     println("ChromeDriver 版本: " + loader.chromeDriverVersion)
@@ -31,18 +34,22 @@ suspend fun main() {
     options.enableDisableCss()
     options.enableIgnoreSslErrors()
     options.enableLoggingPrefs()
+    options.loadExtensions("a", "b")
 
 //    options.enableHeadless()
+    println(loader.defaultChromeUserProfileDir)
     ChromeDriver(options).blockUntilQuitSuspend {
-        get("https://www.bilibili.com/video/BV1Jd9RYaEuz/?spm_id_from=333.1007.tianma.1-1-1.click")
-        println(currentWindow)
-        val tab = currentWindow.newTab(null)
-        println(currentWindow)
-        tab.load("<h1>你好</h1>")
-        println(title)
-        logListener {
-            println(it)
+        get("https://bilibili.com")
+        window.get(null, true).apply {
+            CoroutineScope(Dispatchers.IO).launch {
+                println(windowHandle)
+                loadHtml("你好")
+            }
         }
+
+        Thread.sleep(1000)
+        println("aa: $windowHandles")
+        println("aa: $windows")
     }
 }
 

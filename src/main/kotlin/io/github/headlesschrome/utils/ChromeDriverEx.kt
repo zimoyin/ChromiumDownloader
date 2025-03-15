@@ -1,0 +1,388 @@
+package io.github.headlesschrome.utils
+
+import kotlinx.coroutines.*
+import org.intellij.lang.annotations.Language
+import org.openqa.selenium.JavascriptExecutor
+import org.openqa.selenium.OutputType
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebDriverException
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.interactions.Actions
+import org.openqa.selenium.logging.LogEntry
+import org.openqa.selenium.logging.LogType
+import org.openqa.selenium.support.ui.FluentWait
+import org.openqa.selenium.support.ui.Sleeper
+import org.openqa.selenium.support.ui.WebDriverWait
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.InputStream
+import java.net.URI
+import java.net.URL
+import java.nio.file.Path
+import java.time.Clock
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+import java.util.*
+import java.util.logging.Level
+import javax.imageio.ImageIO
+import kotlin.io.encoding.ExperimentalEncodingApi
+
+/**
+ * 监听窗口创建
+ */
+inline fun ChromeDriver.onCreateWindow(crossinline block: suspend CWindow.() -> Unit): Job {
+    return CoroutineScope(Dispatchers.IO).launch {
+        val list = mutableSetOf<String>()
+        while (true) {
+            kotlin.runCatching {
+                for (id in windowHandles.iterator()) {
+                    if (!list.contains(id)) {
+                        list.add(id)
+                        kotlin.runCatching { CWindow(this@onCreateWindow, id).block() }
+                    }
+                }
+                list.clear()
+                list.addAll(windowHandles)
+            }
+            delay(200)
+        }
+    }
+}
+
+/**
+ *
+ * @author : zimo
+ * @date : 2025/02/09
+ */
+inline fun ChromeDriver.use(block: ChromeDriver.() -> Unit) {
+    try {
+        deleteWebDriverSign()
+        block()
+    } finally {
+        quit()
+    }
+}
+
+inline fun ChromeDriver.isQuit(): Boolean {
+    return try {
+        windowHandles.isEmpty()
+    } catch (e: WebDriverException) {
+        true
+    }.also { isQuit ->
+        if (isQuit) quit()
+    }
+}
+
+/**
+ * 浏览器关闭后执行
+ */
+fun ChromeDriver.onQuit(block: suspend () -> Unit) {
+    CoroutineScope(Dispatchers.IO).launch {
+        while (!isQuit()) {
+            delay(200)
+        }
+        block()
+    }
+}
+
+/**
+ * 阻塞直到浏览器关闭
+ */
+fun ChromeDriver.blockUntilQuit(block: (suspend ChromeDriver.() -> Unit) = {}) {
+    this.finally()
+    runBlocking {
+        block()
+    }
+    while (!isQuit()) {
+        Thread.sleep(200)
+    }
+}
+
+/**
+ * 阻塞直到浏览器关闭
+ */
+suspend fun ChromeDriver.blockUntilQuitSuspend(block: (suspend ChromeDriver.() -> Unit) = {}) {
+    this.finally()
+    block()
+    while (!isQuit()) {
+        delay(200)
+    }
+}
+
+/**
+ * 在JVM关闭时退出浏览器
+ */
+inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
+    deleteWebDriverSign()
+    Runtime.getRuntime().addShutdownHook(Thread {
+        quit()
+    })
+    block()
+}
+
+
+inline fun ChromeDriver.screenshotAsFile(path: String? = null): File {
+    return screenshot<File>().let { if (path != null) it.copyTo(File(path), true) else it }
+}
+
+
+/**
+ * 获取日志
+ * 注意需要开启 ChromeOptions.enableLoggingPrefs 后才生效
+ * @param logType 日志类型
+ * @param level 日志等级
+ */
+inline fun ChromeDriver.logs(logType: String = LogType.BROWSER, level: Level = Level.ALL): List<LogEntry> {
+    return manage().logs().get(logType).filter { it.level.intValue() >= level.intValue() }
+}
+
+/**
+ * 监听当前窗体的控制台日志。注意需要使用 ChromeOptions.enableLoggingPrefs 后才生效
+ * @param windowHandle 窗口句柄
+ * @param logType 日志类型
+ * @param level 日志等级
+ * @param callback 回调
+ * @return Job 调用 cancel() 取消监听
+ */
+inline fun ChromeDriver.logListener(
+    windowHandle: String = this.windowHandle,
+    logType: String = LogType.BROWSER,
+    level: Level = Level.ALL,
+    crossinline callback: (LogEntry) -> Unit,
+): Job {
+    val cw = windows.first { it.windowHandle == windowHandle }
+    return CoroutineScope(Dispatchers.IO).launch {
+        while (!cw.isClose()) {
+            manage().logs().get(logType).map {
+                if (it.level.intValue() >= level.intValue()) callback(it)
+            }
+            delay(20)
+        }
+    }
+}
+
+/**
+ * 打开指定连接，如果没有则打开空窗体
+ */
+inline fun ChromeDriver.get(url: String? = "about:blank", isNewTab: Boolean = false): CWindow {
+    if (isNewTab) this.window.newTab().switchToThis()
+    get(url ?: "about:blank")
+    return window
+}
+
+inline fun ChromeDriver.get(url: URL, isNewTab: Boolean = false): CWindow {
+    get(url.toString(), isNewTab)
+    return window
+}
+
+inline fun ChromeDriver.get(file: File, isNewTab: Boolean = false): CWindow {
+    get(file.toURI().toURL().toString(), isNewTab)
+    return window
+}
+
+inline fun ChromeDriver.get(url: URI, isNewTab: Boolean = false): CWindow {
+    get(url.toURL(), isNewTab)
+    return window
+}
+
+/**
+ * 加载 HTML
+ */
+inline fun ChromeDriver.load(@Language("html") html: String, isNewTab: Boolean = false): CWindow {
+    if (isNewTab) this.window.newTab().switchToThis()
+    // 打开一个空白页面
+    get("about:blank")
+    // 通过 JavaScript 注入 HTML
+    executeScript("document.body.innerHTML = arguments[0];", html)
+    return window
+}
+
+inline fun ChromeDriver.load(file: File, isNewTab: Boolean = false): CWindow {
+    get(file, isNewTab)
+    return window
+}
+
+inline fun ChromeDriver.load(url: URL, isNewTab: Boolean = false): CWindow {
+    get(url, isNewTab)
+    return window
+}
+
+inline fun ChromeDriver.load(url: URI, isNewTab: Boolean = false): CWindow {
+    get(url, isNewTab)
+    return window
+}
+
+/**
+ * 可以使用等待来进行页面等待或者JS等待
+ * WebDriverWait + executeScript
+ * WebDriverWait + ExpectedConditions
+ */
+inline fun ChromeDriver.wait(
+    timeout: Duration,
+    sleep: Duration = Duration.ofMillis(500L),
+    clock: Clock = Clock.systemDefaultZone(),
+    sleeper: Sleeper = Sleeper.SYSTEM_SLEEPER,
+): WebDriverWait {
+    return this.WebDriverWait(timeout, sleep, clock, sleeper)
+}
+
+/**
+ * 可以使用等待来进行页面等待或者JS等待
+ * WebDriverWait + executeScript
+ * WebDriverWait + ExpectedConditions
+ */
+inline fun ChromeDriver.wait(
+    timeout: Long,
+    sleep: Long = 500L,
+    unit: ChronoUnit = ChronoUnit.MILLIS,
+    clock: Clock = Clock.systemDefaultZone(),
+    sleeper: Sleeper = Sleeper.SYSTEM_SLEEPER,
+): WebDriverWait {
+    return this.WebDriverWait(Duration.of(timeout, unit), Duration.of(sleep, unit), clock, sleeper)
+}
+
+/**
+ * 创建一个 Actions 对象, 可以进行鼠标键盘操作
+ */
+inline fun ChromeDriver.Actions(): Actions {
+    return Actions(this)
+}
+
+/**
+ * 创建一个 Actions 对象, 可以进行鼠标键盘操作
+ */
+inline fun ChromeDriver.actions(): Actions {
+    return Actions(this)
+}
+
+/**
+ * 可以使用等待来进行页面等待或者JS等待
+ * WebDriverWait + executeScript
+ * WebDriverWait + ExpectedConditions
+ */
+inline fun ChromeDriver.WebDriverWait(
+    timeout: Duration,
+    sleep: Duration = Duration.ofMillis(500L),
+    clock: Clock = Clock.systemDefaultZone(),
+    sleeper: Sleeper = Sleeper.SYSTEM_SLEEPER,
+): WebDriverWait {
+    return WebDriverWait(this, timeout, sleep, clock, sleeper)
+}
+
+/**
+ * 可以使用等待来进行页面等待或者JS等待
+ * WebDriverWait + executeScript
+ * WebDriverWait + ExpectedConditions
+ */
+inline fun ChromeDriver.WebDriverWait(
+    timeout: Long,
+    sleep: Long = 500L,
+    unit: ChronoUnit = ChronoUnit.MILLIS,
+    clock: Clock = Clock.systemDefaultZone(),
+    sleeper: Sleeper = Sleeper.SYSTEM_SLEEPER,
+): WebDriverWait {
+    return WebDriverWait(this, Duration.of(timeout, unit), Duration.of(sleep, unit), clock, sleeper)
+}
+
+inline fun ChromeDriver.FluentWait(
+    timeout: Duration,
+    pollingEvery: Duration = Duration.ofMillis(500L),
+    message: String = "timeout",
+    ignoringExceptions: List<Class<out Throwable>> = emptyList(),
+): FluentWait<ChromeDriver> {
+    return FluentWait(this)
+        .withTimeout(timeout)
+        .pollingEvery(pollingEvery)
+        .ignoreAll(ignoringExceptions)
+        .withMessage(message)
+}
+
+inline fun ChromeDriver.loadCss(@Language("css") css: String): CWindow {
+    executeScript(
+        """
+        const style = document.createElement('style');
+        style.textContent = arguments[0];
+        document.head.appendChild(style);
+    """, css
+    )
+    return window
+}
+
+/**
+ * 截图并返回对应类型的截图
+ * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
+ */
+@OptIn(ExperimentalEncodingApi::class)
+inline fun <reified T : Any> ChromeDriver.screenshot(): T {
+    return when (T::class.java) {
+
+        ImageIO::class.java -> {
+            ImageIO.read(getScreenshotAs<File>(OutputType.FILE)) as T
+        }
+
+        Path::class.java -> {
+            getScreenshotAs<File>(OutputType.FILE).toPath() as T
+        }
+
+        URL::class.java -> {
+            getScreenshotAs<File>(OutputType.FILE).toURI().toURL() as T
+        }
+
+        URI::class.java -> {
+            getScreenshotAs<File>(OutputType.FILE).toURI() as T
+        }
+
+        Base64::class.java -> {
+            getScreenshotAs<String>(OutputType.BASE64) as T
+        }
+
+        kotlin.io.encoding.Base64::class.java -> {
+            Base64.getEncoder().encodeToString(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
+        }
+
+        Base64::getEncoder::class.java -> {
+            Base64.getEncoder().encodeToString(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
+        }
+
+        BufferedImage::class.java -> {
+            ImageIO.read(getScreenshotAs<File>(OutputType.FILE)) as T
+        }
+
+        String::class.java -> {
+            getScreenshotAs<String>(OutputType.BASE64) as T
+        }
+
+        File::class.java -> {
+            getScreenshotAs<File>(OutputType.FILE) as T
+        }
+
+        ByteArray::class.java -> {
+            getScreenshotAs<ByteArray>(OutputType.BYTES) as T
+        }
+
+        InputStream::class.java -> {
+            ByteArrayInputStream(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
+        }
+
+        Any::class.java -> {
+            getScreenshotAs<String>(OutputType.BASE64) as T
+        }
+
+        else -> throw IllegalArgumentException("Unsupported type: ${T::class.java}")
+    }
+}
+
+fun WebDriver.deleteWebDriverSign() {
+    kotlin.runCatching {
+        val js = this as JavascriptExecutor
+        // 方法 2: 覆盖 getter（推荐）
+        js.executeScript(
+            """
+        Object.defineProperty(navigator, 'webdriver', {
+            get: () => undefined
+        });
+        """.trimIndent()
+        )
+    }
+}
