@@ -186,16 +186,19 @@ open class CWindow(
         get(url ?: "about:blank")
         return@aroundWindow this
     }
+
     @JvmOverloads
     fun get(url: URL, isNewTab: Boolean = false): CWindow = aroundWindow {
         get(url.toString(), isNewTab)
         return@aroundWindow this
     }
+
     @JvmOverloads
     fun get(file: File, isNewTab: Boolean = false): CWindow = aroundWindow {
         get(file.toURI().toURL().toString(), isNewTab)
         return@aroundWindow this
     }
+
     @JvmOverloads
     fun get(url: URI, isNewTab: Boolean = false): CWindow = aroundWindow {
         get(url.toURL(), isNewTab)
@@ -615,6 +618,11 @@ fun ChromeOptions.enableHeadless(): ChromeOptions {
     return this
 }
 
+fun ChromeOptions.enableHeadlessNew(): ChromeOptions {
+    addArguments("--headless=new")
+    return this
+}
+
 /**
  * 禁用浏览器信息栏上的“Chrome正受到自动测试软件的控制。” 提示
  */
@@ -883,4 +891,62 @@ fun ChromeOptions.enableLoggingPrefs(
 ): ChromeOptions {
     setCapability("goog:loggingPrefs", loggingPrefs)
     return this
+}
+
+/**
+ * 使用参数添加扩展
+ * 推荐开启：
+ * enableDisableExtensionsFileAccessCheck
+ * @param paths 扩展路径,可以是 .crx 文件路径,也可以是文件夹路径
+ * @return ChromeOptions
+ */
+fun ChromeOptions.loadExtensions(vararg paths: String): ChromeOptions {
+    val paths0 = paths.asSequence()
+        .map { File(it) }
+        .filter { it.exists() }
+        .filter { if (it.isFile) it.extension == "crx" else true }
+        .filter { if (it.isDirectory) it.resolve("manifest.json").exists() else true }
+        .joinToString(",") { it.canonicalPath }
+    // 加载扩展
+    addArguments("--load-extension=$paths0")
+    return this
+}
+
+/**
+ * 主要功能：禁用 Chrome 对扩展程序访问本地文件系统的安全检查。
+ * 默认行为：Chrome 默认会阻止未明确授权的扩展程序访问本地文件（出于安全考虑）。
+ *
+ * 启用后：
+ * 允许扩展程序直接读写本地文件（无需用户手动授权）。
+ * 扩展可通过 file:// 协议访问本地文件路径。
+ */
+fun ChromeOptions.enableDisableExtensionsFileAccessCheck(): ChromeOptions {
+    addArguments("--disable-extensions-file-access-check")
+    return this
+}
+
+/**
+ * 主要功能：禁用浏览器的弹窗拦截功能。
+ * 默认行为：Chrome 默认拦截非用户触发的弹窗（如 window.open() 或 <a target="_blank">）。
+ *
+ * 启用后：
+ * 所有弹窗（包括广告、新标签页）均不会被拦截。
+ * 允许通过 JavaScript 自由创建新窗口。
+ */
+fun ChromeOptions.enableDisablePopupBlocking(): ChromeOptions {
+    addArguments("--disable-popup-blocking")
+    return this
+}
+fun ChromeOptions.getOptions(): Map<String, Any> {
+    return asMap()["goog:chromeOptions"] as Map<String, Any>
+}
+
+fun ChromeOptions.getPrefOptions(): MutableMap<String, Any> {
+    val prefs = getOptions().getOrDefault("prefs", mutableMapOf<String, Any>())
+    return prefs as MutableMap<String, Any>
+}
+
+fun ChromeOptions.getArgOptions(): MutableMap<String, Any> {
+    val args = getOptions().getOrDefault("args", mutableMapOf<String, Any>())
+    return args as MutableMap<String, Any>
 }

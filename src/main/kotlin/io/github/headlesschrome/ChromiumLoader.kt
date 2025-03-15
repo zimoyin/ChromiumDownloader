@@ -3,6 +3,7 @@ package io.github.headlesschrome
 import io.github.headlesschrome.download.AbsChromiumDownloader
 import io.github.headlesschrome.download.ChromiumDownloader
 import io.github.headlesschrome.location.Platform
+import io.github.headlesschrome.utils.setUserProfileDir
 import kotlinx.coroutines.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
@@ -36,11 +37,11 @@ class ChromiumLoader(
         path: String = "./chrome",
         platform: Platform = Platform.currentPlatform(),
         downloader0: AbsChromiumDownloader? = null,
-    ) : this( path, platform, downloader0, downloader0?.proxy)
+    ) : this(path, platform, downloader0, downloader0?.proxy)
 
     constructor(
         downloader0: AbsChromiumDownloader? = null,
-    ) : this( "./chrome", Platform.currentPlatform(), downloader0)
+    ) : this("./chrome", Platform.currentPlatform(), downloader0)
 
     val downloader: AbsChromiumDownloader by lazy {
         downloader0 ?: ChromiumDownloader(proxy, ChromiumDownloader.getLastPosition(platform, proxy), path)
@@ -61,14 +62,22 @@ class ChromiumLoader(
         getChromeDriverVersion(chromeDriverPath)
     }
 
-    fun load(): ChromeOptions {
-        return ChromiumLoader.load(path)
+    /**
+     * 建议用户数据存储位置
+     */
+    val defaultChromeUserProfileDir: String by lazy {
+        File(chromePath).parentFile.resolve("chrome-user-data").canonicalPath
+    }
+
+    fun load(): ChromeOptions = load(path).apply {
+        kotlin.runCatching { setUserProfileDir(defaultChromeUserProfileDir) }
     }
 
     @JvmOverloads
-    fun downloadAndLoad(isPathMatchingEnabled: Boolean = true): ChromeOptions {
-        return ChromiumLoader.downloadAndLoad(proxy, path, platform, downloader, isPathMatchingEnabled)
-    }
+    fun downloadAndLoad(isPathMatchingEnabled: Boolean = true): ChromeOptions =
+        downloadAndLoad(proxy, path, platform, downloader, isPathMatchingEnabled).apply {
+            kotlin.runCatching { setUserProfileDir(defaultChromeUserProfileDir) }
+        }
 
 
     companion object {
