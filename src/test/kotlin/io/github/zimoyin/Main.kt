@@ -34,22 +34,16 @@ suspend fun main() {
     options.enableDisableCss()
     options.enableIgnoreSslErrors()
     options.enableLoggingPrefs()
-    options.loadExtensions("a", "b")
+
+    options.addArguments("--autoplay-policy=no-user-gesture-required")
+    options.addArguments("--enable-features=EnableOpusPlayback,EnableH264Playback")
+    options.addArguments("--use-fake-ui-for-media-stream")
+    options.addArguments("--use-fake-device-for-media-stream")
+    options.addArguments("--enable-features=Widevine")
 
 //    options.enableHeadless()
-    println(loader.defaultChromeUserProfileDir)
     ChromeDriver(options).blockUntilQuitSuspend {
         get("https://bilibili.com")
-        window.get(null, true).apply {
-            CoroutineScope(Dispatchers.IO).launch {
-                println(windowHandle)
-                loadHtml("你好")
-            }
-        }
-
-        Thread.sleep(1000)
-        println("aa: $windowHandles")
-        println("aa: $windows")
     }
 }
 

@@ -69,8 +69,6 @@ inline fun ChromeDriver.isQuit(): Boolean {
         windowHandles.isEmpty()
     } catch (e: WebDriverException) {
         true
-    }.also { isQuit ->
-        if (isQuit) quit()
     }
 }
 
@@ -116,7 +114,7 @@ suspend fun ChromeDriver.blockUntilQuitSuspend(block: (suspend ChromeDriver.() -
 inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
     deleteWebDriverSign()
     Runtime.getRuntime().addShutdownHook(Thread {
-        quit()
+       kotlin.runCatching { quit() }
     })
     block()
 }
