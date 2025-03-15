@@ -7,7 +7,7 @@ plugins {
 
 description = "Chromium Downloader"
 group = "io.github.zimoyin"
-version = "1.2.22"
+version = "1.2.23"
 
 repositories {
     mavenCentral()
