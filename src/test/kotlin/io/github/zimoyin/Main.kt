@@ -44,9 +44,6 @@ suspend fun main() {
 //    options.enableHeadless()
     ChromeDriver(options).blockUntilQuitSuspend {
         get("https://bilibili.com")
-        val n = navigate()
-        windows.newTab(switchTo = true)
-        n.to("https://baidu.com")
     }
 }
 
