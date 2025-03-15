@@ -84,6 +84,11 @@ loader.downloader.downloadChromeDriver()
 ## ChromiumEx 类
 该类是用于将 Kotlin ChromeDriver 拓展方法封装到一个类中方便 Java 使用
 
+# CWindow 类
+对 ChromeDriver 的聚合封装。
+* Java 可以通过 ChromiumEx 获取 CWindow 的子类实现
+* Kotlin 通过 ChromeDriver.window 获取当前窗口的实现
+
 ## Kotlin ChromeDriver拓展方法
 * use 使用完毕后关闭浏览器
 * isQuit 是否退出
