@@ -44,16 +44,30 @@ var ChromeDriver.isWindowSynchronized: Boolean
 private val cws = HashMap<ChromeDriver, Boolean>()
 private val cwz = HashMap<ChromeDriver, MutableList<CWindow>>()
 
+fun List<CWindow>.newTab(url: String = "about:blank", switchTo: Boolean = true): CWindow {
+    return first().newTab(url, switchTo)
+}
+
+fun List<CWindow>.newWindow(url: String = "about:blank", switchTo: Boolean = true): CWindow {
+    return first().newWindow(url, switchTo)
+}
+
+fun List<CWindow>.closeWindow(windowHandleID: String){
+    for (cw in this) {
+        if (windowHandleID == cw.windowHandleID) cw.close()
+    }
+}
 
 /**
- * 窗口对象
+ * 聚合窗口对象，将所有类的API基本聚合在了一起
+ * 该类对象，可以在其他当前窗体下操作另外的窗体，他将临时的切换到其他窗体中进行操作
  * @param driver 浏览器对象
  * @param windowHandleID 窗口ID
  * @param isSynchronized 是否同步，默认为 true，即同步。针对非当前窗体时，如果为 false，则不会对切换窗体时进行锁操作
  */
 open class CWindow(
     open val driver: ChromeDriver,
-    private val windowHandleID: String,
+    val windowHandleID: String,
     var isSynchronized: Boolean = true,
 ) : WebDriver {
 
@@ -83,11 +97,20 @@ open class CWindow(
             driver.manage().window().size = value
         }
 
+
+    var position: Point
+        get() = aroundWindow { driver.manage().window().position }
+        set(value) = aroundWindow {
+            driver.manage().window().position = value
+        }
+
     var url: String?
         get() = aroundWindow { driver.currentUrl }
         set(value) {
             value?.let { get(it) }
         }
+
+    val cookieManager: CookieManager = CookieManager(this)
 
     /**
      * 获取当前窗口的日志
@@ -316,12 +339,20 @@ open class CWindow(
         return window
     }
 
+    @Deprecated("可能会带来 BUG", ReplaceWith("back(), forward()..."))
+    @JvmSynthetic
     override fun navigate(): WebDriver.Navigation = aroundWindow {
         return@aroundWindow driver.navigate()
     }
 
+    @Deprecated("可能会带来 BUG", ReplaceWith("cookieManager, timeouts"))
+    @JvmSynthetic
     override fun manage(): WebDriver.Options = aroundWindow {
         return@aroundWindow driver.manage()
+    }
+
+    fun timeouts() = aroundWindow {
+        return@aroundWindow driver.manage().timeouts()
     }
 
     fun back() = aroundWindow {
@@ -331,6 +362,14 @@ open class CWindow(
 
     fun forward() = aroundWindow {
         driver.navigate().forward()
+    }
+
+    fun refresh() = aroundWindow {
+        driver.navigate().refresh()
+    }
+
+    fun loadNextUrl(url: String) = aroundWindow {
+        driver.navigate().to(url)
     }
 
     fun switchToFrame(frame: WebElement) = aroundWindow {
@@ -481,20 +520,24 @@ open class CWindow(
     }
 
     @JvmOverloads
-    fun newWindow(url: String? = currentUrl) = aroundWindow {
+    fun newWindow(url: String? = currentUrl, switchTo: Boolean = false) = aroundWindow {
         driver.switchTo().window(windowHandleID)
         driver.switchTo().newWindow(WindowType.WINDOW).let {
             if (url == null) it.get("about:blank") else it.get(url)
             CWindow(it as ChromeDriver, it.windowHandle)
         }
+    }.apply {
+        if (switchTo) switchTo(this) else this
     }
 
     @JvmOverloads
-    fun newTab(url: String? = currentUrl) = aroundWindow {
+    fun newTab(url: String? = currentUrl, switchTo: Boolean = false) = aroundWindow {
         driver.switchTo().newWindow(WindowType.TAB).let {
             if (url.isNullOrEmpty()) it.get("about:blank") else it.get(url)
             CWindow(it as ChromeDriver, it.windowHandle)
         }
+    }.apply {
+        if (switchTo) switchTo(this) else this
     }
 
     fun fullscreen() = aroundWindow {
@@ -505,6 +548,16 @@ open class CWindow(
     fun maximize() = aroundWindow {
         driver.switchTo().window(windowHandleID)
         driver.manage().window().maximize()
+    }
+
+    fun minimize() = aroundWindow {
+        driver.switchTo().window(windowHandleID)
+        driver.manage().window().minimize()
+    }
+
+    fun resize(width: Int, height: Int) = aroundWindow {
+        driver.switchTo().window(windowHandleID)
+        driver.manage().window().size = Dimension(width, height)
     }
 
     override fun close() = aroundWindow {
@@ -546,10 +599,12 @@ open class CWindow(
         return driver.onCreateWindow(block)
     }
 
+    @Deprecated("use windows instead")
     override fun getWindowHandles(): MutableSet<String> {
         return driver.windowHandles
     }
 
+    @Deprecated("use windowHandleID instead")
     override fun getWindowHandle(): String = windowHandleID
 
     fun <T> aroundWindow(currentWindowId: String = currentWindowHandle, block: CWindow.() -> T): T {
@@ -599,5 +654,55 @@ open class CWindow(
 
     override fun toString(): String {
         return windowHandleID
+    }
+}
+
+class CookieManager(
+    val window: CWindow,
+) {
+
+    private fun <T> aroundWindow(block: WebDriver.Options.() -> T): T {
+        return window.aroundWindow {
+            block(manage())
+        }
+    }
+
+    val cookies: Set<Cookie>
+        get() = aroundWindow { cookies }
+
+    fun get(key: String): Cookie? {
+        return aroundWindow { getCookieNamed(key) }
+    }
+
+    fun getValue(key: String): String? {
+        return aroundWindow { getCookieNamed(key)?.value }
+    }
+
+    fun builder(key: String, value: String) = Cookie.Builder(key, value)
+
+    fun add(key: String, value: String) {
+        aroundWindow { addCookie(Cookie.Builder(key, value).build()) }
+    }
+
+    fun add(vararg cookies: Cookie) {
+        aroundWindow {
+            for (cookie in cookies) addCookie(cookie)
+        }
+    }
+
+    fun add(cookies: List<Cookie>) {
+        aroundWindow {
+            for (cookie in cookies) addCookie(cookie)
+        }
+    }
+
+    fun delete(name: String): Cookie? = aroundWindow {
+        val temp = get(name)
+        deleteCookieNamed(name)
+        return@aroundWindow temp
+    }
+
+    fun deleteAll() {
+        aroundWindow { deleteAllCookies() }
     }
 }
