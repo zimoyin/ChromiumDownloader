@@ -68,6 +68,7 @@ class ChromiumDownloader(
     override fun downloadChrome() {
         val regex = """^chrome-[a-z]+\.zip$""".toRegex()
         try {
+            initAppDir()
             download(regex, appDir)
         } catch (e: Exception) {
             throw RuntimeException(
@@ -80,6 +81,7 @@ class ChromiumDownloader(
     override fun downloadChromeDriver() {
         val regex = """^chromedriver_[a-zA-Z0-9]+\.zip$""".toRegex()
         try {
+            initDriverDir()
             download(regex, driverDir)
         } catch (e: Exception) {
             throw RuntimeException(

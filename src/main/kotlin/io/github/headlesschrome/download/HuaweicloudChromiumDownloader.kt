@@ -36,6 +36,7 @@ class HuaweicloudChromiumDownloader(
             Platform.Win, Platform.Win_x64 -> "chrome-win.zip"
             else -> throw IllegalArgumentException("Unsupported platform: ${positioner.platform}")
         }
+        initAppDir()
         val url = createURL(positioner.platform, positioner.revision, fileName)
         val zip = File(appDir, fileName)
         url.connection(proxy).getInputStream().use { input ->
@@ -66,6 +67,7 @@ class HuaweicloudChromiumDownloader(
                 it
             }
         }
+        initDriverDir()
         val url = createURL(null, driverVersion, fileName, BASE_URL_DRIVER)
         val zip = File(driverDir, fileName)
         url.connection(proxy).getInputStream().use { input ->
