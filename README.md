@@ -81,13 +81,45 @@ loader.downloader.downloadChromeDriver()
 </dependency>
 ```
 
-## ChromiumEx 类
+## ChromiumEx 类 (JAVA)
 该类是用于将 Kotlin ChromeDriver 拓展方法封装到一个类中方便 Java 使用
+```java
+ChromiumLoader loader = new ChromiumLoader(new HuaweicloudChromiumDownloader());
+ChromeOptions options = loader.downloadAndLoad(true);
+ChromeOptionsExKt.enableHeadless(options);
+ChromeDriver driver = new ChromeDriver(options);
+ChromiumEx ex = new ChromiumEx(driver);
+```
 
-# CWindow 类
+## ChromeOptionsExKt 类
+该类用于 ChromeOptions 的拓展方法
+* Java
+```java
+ChromeOptionsExKt.enableHeadless(options);
+// ...
+```
+* Kotlin
+```kotlin
+options.enableHeadless();
+```
+
+## CWindow 类
 对 ChromeDriver 的聚合封装。
 * Java 可以通过 ChromiumEx 获取 CWindow 的子类实现
+```java
+ChromiumEx ex = new ChromiumEx(driver);
+// ex.blockUntilQuit 阻塞当前线程直到浏览器关闭
+ex.blockUntilQuit(ex0->{
+    CWindow main = ex0.get("https://baidu.com");
+});
+```
 * Kotlin 通过 ChromeDriver.window 获取当前窗口的实现
+```kotlin
+ChromeDriver(options).blockUntilQuitSuspend {
+    get(qr_code)
+    var main = window
+}
+```
 
 ## Kotlin ChromeDriver拓展方法
 * use 使用完毕后关闭浏览器
