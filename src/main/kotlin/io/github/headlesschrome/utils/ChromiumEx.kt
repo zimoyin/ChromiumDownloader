@@ -45,6 +45,15 @@ class ChromiumEx(
     }
 
     /**
+     * 阻塞直到浏览器关闭
+     */
+    fun blockUntilQuit(c: Consumer<ChromiumEx>) {
+        driver.blockUntilQuit {
+            c.accept(ChromiumEx(driver))
+        }
+    }
+
+    /**
      * 监听当前窗体的控制台日志。注意需要使用 ChromiumEx.enableLoggingPrefs 后才生效
      * @param logType 日志类型
      * @param level 日志等级
