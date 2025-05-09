@@ -32,7 +32,7 @@ class ChromiumLoader(
     private val proxy: Proxy? = downloader0?.proxy,
 ) {
 
-    @JvmOverloads
+
     constructor(
         path: String = "./chrome",
         platform: Platform = Platform.currentPlatform(),
@@ -40,8 +40,24 @@ class ChromiumLoader(
     ) : this(path, platform, downloader0, downloader0?.proxy)
 
     constructor(
+        path: String = "./chrome",
+        downloader0: AbsChromiumDownloader? = null,
+    ) : this(path, Platform.currentPlatform(), downloader0, downloader0?.proxy)
+
+
+    constructor(
+        downloader0: AbsChromiumDownloader? = null,
+        proxy: Proxy? = downloader0?.proxy,
+    ) : this("./chrome", Platform.currentPlatform(), downloader0, proxy)
+
+    constructor(
+        proxy: Proxy? = null,
+    ) : this("./chrome", Platform.currentPlatform(), null, proxy)
+
+    constructor(
         downloader0: AbsChromiumDownloader? = null,
     ) : this("./chrome", Platform.currentPlatform(), downloader0)
+
 
     val downloader: AbsChromiumDownloader by lazy {
         downloader0 ?: ChromiumDownloader(proxy, ChromiumDownloader.getLastPosition(platform, proxy), path)

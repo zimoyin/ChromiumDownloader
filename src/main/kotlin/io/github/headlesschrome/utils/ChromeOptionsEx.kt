@@ -6,6 +6,7 @@ import org.openqa.selenium.logging.LoggingPreferences
 import java.io.File
 import java.util.logging.Level
 
+
 fun ChromeOptions.enableNoSandbox(): ChromeOptions {
     addArguments("--no-sandbox")
     return this

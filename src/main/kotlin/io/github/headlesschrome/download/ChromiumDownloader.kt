@@ -40,6 +40,7 @@ class ChromiumDownloader(
 ) : AbsChromiumDownloader(positioner, proxy, path, rootDir, appDir, driverDir) {
 
     constructor(host: String, port: Int) : this(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, port)))
+
     constructor(
         host: String,
         port: Int,
