@@ -77,7 +77,7 @@ loader.downloader.downloadChromeDriver()
 <dependency>
     <groupId>io.github.zimoyin</groupId>
     <artifactId>ChromiumDownloader</artifactId>
-    <version>1.2.24</version>
+    <version>1.2.25</version>
 </dependency>
 ```
 
