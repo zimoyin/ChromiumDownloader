@@ -150,6 +150,14 @@ fun ChromeOptions.setUserProfileDir(profilePath: String): ChromeOptions {
 }
 
 /**
+ * 设置 userAgent
+ */
+fun ChromeOptions.setUserAgent(userAgent: String): ChromeOptions {
+    addArguments("--user-agent=$userAgent")
+    return this
+}
+
+/**
  * 禁用默认浏览器检查
  */
 fun ChromeOptions.disableDefaultBrowserCheck(): ChromeOptions {
