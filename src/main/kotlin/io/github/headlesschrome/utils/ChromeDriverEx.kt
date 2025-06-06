@@ -433,3 +433,5 @@ fun WebDriver.findElementsByCssSelector(cssSelector: String): List<WebElement> {
     return findElements(By.cssSelector(cssSelector))
 }
 
+val WebDriver.html: String
+    get() = pageSource as String

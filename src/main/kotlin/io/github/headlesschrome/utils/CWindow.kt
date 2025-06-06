@@ -299,6 +299,11 @@ open class CWindow(
         return this
     }
 
+    val html: String
+        get() = aroundWindow {
+            return@aroundWindow driver.pageSource as String
+        }
+
     fun htmlAsWebElement(): WebElement = aroundWindow {
         return@aroundWindow findElement(By.tagName("html"))
     }
@@ -311,12 +316,12 @@ open class CWindow(
         return@aroundWindow findElement(By.tagName("head"))
     }
 
-    fun findElementById(id: String): WebElement = aroundWindow {
-        return@aroundWindow findElement(By.id(id))
+    fun findElementById(id: String): WebElement? = aroundWindow {
+        return@aroundWindow runCatching { findElement(By.id(id)) }.getOrNull()
     }
 
-    fun findElementByXpath(xpath: String): WebElement = aroundWindow {
-        return@aroundWindow findElement(By.xpath(xpath))
+    fun findElementByXpath(xpath: String): WebElement? = aroundWindow {
+        return@aroundWindow runCatching { findElement(By.xpath(xpath)) }.getOrNull()
     }
 
     fun findElementsByXpath(xpath: String): List<WebElement> = aroundWindow {
@@ -408,9 +413,21 @@ open class CWindow(
         driver.navigate().to(url)
     }
 
-    fun switchToFrame(frame: WebElement) = aroundWindow {
-        driver.switchTo().frame(frame)
+    @Deprecated("请使用 frame(WebElement)")
+    fun switchToFrame(frame: WebElement) =  driver.switchTo().frame(frame)
+
+    @Deprecated("请使用 frame(WebElement)")
+    fun switchToFrame(frameIndex: Int) = driver.switchTo().frame(frameIndex)
+
+    fun frame(frame: WebElement,callback: WebDriver.() -> Unit) = aroundWindow {
+        callback(driver.switchTo().frame(frame))
     }
+
+    /**
+     * 切换到主窗口, 即通过 switchTo 进入了 frame 等, 需要返回主窗口
+     */
+    @Deprecated("")
+    fun switchToMain(frameIndex: Int) = driver.switchTo().defaultContent()
 
     @JvmSynthetic
     override fun get(url: String) = aroundWindow {
@@ -468,8 +485,8 @@ open class CWindow(
     /**
      * switchTo alert
      */
-    fun alert(): Alert = aroundWindow {
-        return@aroundWindow driver.switchTo().alert()
+    fun alert(callback: (Alert) -> Unit) = aroundWindow {
+        callback(driver.switchTo().alert())
     }
 
     /**
