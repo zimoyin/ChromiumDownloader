@@ -36,6 +36,10 @@ class ChromiumLoader(
     init {
         if (path == CHROME_DOWNLOAD_PATH) path = downloader0?.path ?: path
         if (platform != Platform.currentPlatform()) platform = downloader0?.positioner?.platform ?: platform
+
+        File(path).apply {
+            if (!exists()) mkdirs()
+        }
     }
 
     constructor(

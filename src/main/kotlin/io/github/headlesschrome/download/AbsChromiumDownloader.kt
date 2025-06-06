@@ -26,6 +26,12 @@ abstract class AbsChromiumDownloader(
     val driverDir: File = rootDir.resolve("driver"),
 ) {
 
+    init {
+        initRootDir()
+        initAppDir()
+        initDriverDir()
+    }
+
     fun initRootDir() {
         rootDir.mkdirs()
     }
