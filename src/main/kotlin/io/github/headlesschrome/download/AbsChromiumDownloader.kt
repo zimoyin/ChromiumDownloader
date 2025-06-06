@@ -26,22 +26,19 @@ abstract class AbsChromiumDownloader(
     val driverDir: File = rootDir.resolve("driver"),
 ) {
 
-    init {
-        initRootDir()
-        initAppDir()
-        initDriverDir()
-    }
-
     fun initRootDir() {
         rootDir.mkdirs()
+        if (!rootDir.exists()) throw RuntimeException("rootDir not created")
     }
 
     fun initAppDir() {
         appDir.mkdirs()
+        if (!appDir.exists()) throw RuntimeException("appDir not created")
     }
 
     fun initDriverDir() {
         driverDir.mkdirs()
+        if (!driverDir.exists()) throw RuntimeException("driverDir not created")
     }
 
     abstract fun downloadChrome()

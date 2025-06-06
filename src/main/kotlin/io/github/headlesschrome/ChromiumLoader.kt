@@ -23,60 +23,54 @@ import kotlin.io.path.name
 import kotlin.jvm.optionals.getOrDefault
 
 /**
+ * 注意：如果设置了 downloader0 则会覆盖 scanPath
  * @author : zimo
  * @date : 2025/02/08
  */
 class ChromiumLoader(
-    var path: String = CHROME_DOWNLOAD_PATH,
-    var platform: Platform = Platform.currentPlatform(),
-    private val downloader0: AbsChromiumDownloader? = null,
+    var scanPath: String = CHROME_DOWNLOAD_PATH,
+    private var downloader0: AbsChromiumDownloader? = null,
     private val proxy: Proxy? = downloader0?.proxy,
 ) {
+    var platform: Platform = Platform.currentPlatform()
+        private set
 
     init {
-        if (path == CHROME_DOWNLOAD_PATH) path = downloader0?.path ?: path
-        if (platform != Platform.currentPlatform()) platform = downloader0?.positioner?.platform ?: platform
-
-        File(path).apply {
-            if (!exists()) mkdirs()
+        downloader0?.apply {
+            scanPath = path
+            platform = positioner.platform
         }
     }
 
     constructor(
         path: String = CHROME_DOWNLOAD_PATH,
-        platform: Platform = Platform.currentPlatform(),
         downloader0: AbsChromiumDownloader? = null,
-    ) : this(path, platform, downloader0, downloader0?.proxy)
-
-    constructor(
-        path: String = CHROME_DOWNLOAD_PATH,
-        downloader0: AbsChromiumDownloader? = null,
-    ) : this(path, Platform.currentPlatform(), downloader0, downloader0?.proxy)
-
+    ) : this(path, downloader0, downloader0?.proxy)
 
     constructor(
         downloader0: AbsChromiumDownloader? = null,
         proxy: Proxy? = downloader0?.proxy,
-    ) : this(CHROME_DOWNLOAD_PATH, Platform.currentPlatform(), downloader0, proxy)
+    ) : this(CHROME_DOWNLOAD_PATH, downloader0, proxy)
 
     constructor(
         proxy: Proxy? = null,
-    ) : this(CHROME_DOWNLOAD_PATH, Platform.currentPlatform(), null, proxy)
+    ) : this(CHROME_DOWNLOAD_PATH, null, proxy)
 
     constructor(
         downloader0: AbsChromiumDownloader? = null,
-    ) : this(CHROME_DOWNLOAD_PATH, Platform.currentPlatform(), downloader0)
+    ) : this(CHROME_DOWNLOAD_PATH, downloader0)
 
 
     val downloader: AbsChromiumDownloader by lazy {
-        downloader0 ?: ChromiumDownloader(proxy, ChromiumDownloader.getLastPosition(platform, proxy), path)
+        downloader0 ?: ChromiumDownloader(proxy, ChromiumDownloader.getLastPosition(platform, proxy), scanPath)
     }
+
     val chromePath: String by lazy {
-        findChrome(path)
+        findChrome(scanPath)
     }
 
     val chromeDriverPath: String by lazy {
-        findChromeDriver(path)
+        findChromeDriver(scanPath)
     }
 
     val chromeVersion: String by lazy {
@@ -94,13 +88,13 @@ class ChromiumLoader(
         File(chromePath).parentFile.resolve("chrome-user-data").canonicalPath
     }
 
-    fun load(): ChromeOptions = load(path).apply {
+    fun load(): ChromeOptions = load(scanPath).apply {
         kotlin.runCatching { setUserProfileDir(defaultChromeUserProfileDir) }
     }
 
     @JvmOverloads
     fun downloadAndLoad(isPathMatchingEnabled: Boolean = true): ChromeOptions =
-        downloadAndLoad(proxy, path, platform, downloader, isPathMatchingEnabled).apply {
+        downloadAndLoad(proxy, scanPath, platform, downloader, isPathMatchingEnabled).apply {
             kotlin.runCatching { setUserProfileDir(defaultChromeUserProfileDir) }
         }
 
