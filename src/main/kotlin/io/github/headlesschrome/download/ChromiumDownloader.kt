@@ -63,7 +63,7 @@ class ChromiumDownloader(
         val url = URI.create(template).toURL()
         val connection = url.connection(proxy)
         val json = connection.inputStream.use {
-            it.readAllBytes().decodeToString()
+            it.readBytes().decodeToString()
         }
         parseJson(json)
     }
@@ -157,7 +157,7 @@ class ChromiumDownloader(
             // 如果提供了代理，则使用代理打开连接；否则直接打开连接
             val connection = url.connection(proxy)
             val revision = connection.inputStream.use {
-                it.readAllBytes().decodeToString()
+                it.readBytes().decodeToString()
             }
             return Positioner(platform, revision)
         }

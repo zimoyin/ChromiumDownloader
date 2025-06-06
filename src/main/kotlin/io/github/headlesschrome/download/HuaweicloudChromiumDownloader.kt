@@ -112,7 +112,7 @@ class HuaweicloudChromiumDownloader(
             val url = createURL(null, fileName = ".index.json", base = BASE_URL_DRIVER)
             val connection = url.connection(proxy)
             val json = connection.inputStream.use {
-                it.readAllBytes().decodeToString()
+                it.readBytes().decodeToString()
             }
             val jsonInput: JsonInput = Json().newInput(StringReader(json))
             val from =

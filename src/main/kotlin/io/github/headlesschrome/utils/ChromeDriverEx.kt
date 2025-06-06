@@ -67,7 +67,7 @@ inline fun ChromeDriver.use(block: ChromeDriver.() -> Unit) {
     }
 }
 
-inline fun ChromeDriver.isQuit(): Boolean {
+ fun ChromeDriver.isQuit(): Boolean {
     return try {
         windowHandles.isEmpty()
     } catch (e: WebDriverException) {
@@ -123,7 +123,7 @@ inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
 }
 
 
-inline fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
+ fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
     return screenshotAsT<File>().let { if (path != null) it.copyTo(File(path), true) else it }
 }
 
@@ -134,7 +134,7 @@ inline fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
  * @param logType 日志类型
  * @param level 日志等级
  */
-inline fun ChromeDriver.logs(logType: String = LogType.BROWSER, level: Level = Level.ALL): List<LogEntry> {
+ fun ChromeDriver.logs(logType: String = LogType.BROWSER, level: Level = Level.ALL): List<LogEntry> {
     return manage().logs().get(logType).filter { it.level.intValue() >= level.intValue() }
 }
 
@@ -166,23 +166,23 @@ inline fun ChromeDriver.logListener(
 /**
  * 打开指定连接，如果没有则打开空窗体
  */
-inline fun ChromeDriver.get(url: String? = "about:blank", isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.get(url: String? = "about:blank", isNewTab: Boolean = false): CWindow {
     if (isNewTab) this.window.newTab().switchToThis()
     get(url ?: "about:blank")
     return window
 }
 
-inline fun ChromeDriver.get(url: URL, isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.get(url: URL, isNewTab: Boolean = false): CWindow {
     get(url.toString(), isNewTab)
     return window
 }
 
-inline fun ChromeDriver.get(file: File, isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.get(file: File, isNewTab: Boolean = false): CWindow {
     get(file.toURI().toURL().toString(), isNewTab)
     return window
 }
 
-inline fun ChromeDriver.get(url: URI, isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.get(url: URI, isNewTab: Boolean = false): CWindow {
     get(url.toURL(), isNewTab)
     return window
 }
@@ -190,7 +190,7 @@ inline fun ChromeDriver.get(url: URI, isNewTab: Boolean = false): CWindow {
 /**
  * 加载 HTML
  */
-inline fun ChromeDriver.load(@Language("html") html: String, isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.load(@Language("html") html: String, isNewTab: Boolean = false): CWindow {
     if (isNewTab) this.window.newTab().switchToThis()
     // 打开一个空白页面
     get("about:blank")
@@ -199,17 +199,17 @@ inline fun ChromeDriver.load(@Language("html") html: String, isNewTab: Boolean =
     return window
 }
 
-inline fun ChromeDriver.load(file: File, isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.load(file: File, isNewTab: Boolean = false): CWindow {
     get(file, isNewTab)
     return window
 }
 
-inline fun ChromeDriver.load(url: URL, isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.load(url: URL, isNewTab: Boolean = false): CWindow {
     get(url, isNewTab)
     return window
 }
 
-inline fun ChromeDriver.load(url: URI, isNewTab: Boolean = false): CWindow {
+ fun ChromeDriver.load(url: URI, isNewTab: Boolean = false): CWindow {
     get(url, isNewTab)
     return window
 }
@@ -219,7 +219,7 @@ inline fun ChromeDriver.load(url: URI, isNewTab: Boolean = false): CWindow {
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
-inline fun ChromeDriver.wait(
+ fun ChromeDriver.wait(
     timeout: Duration,
     sleep: Duration = Duration.ofMillis(500L),
     clock: Clock = Clock.systemDefaultZone(),
@@ -233,7 +233,7 @@ inline fun ChromeDriver.wait(
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
-inline fun ChromeDriver.wait(
+ fun ChromeDriver.wait(
     timeout: Long,
     sleep: Long = 500L,
     unit: ChronoUnit = ChronoUnit.MILLIS,
@@ -246,14 +246,14 @@ inline fun ChromeDriver.wait(
 /**
  * 创建一个 Actions 对象, 可以进行鼠标键盘操作
  */
-inline fun ChromeDriver.Actions(): Actions {
+ fun ChromeDriver.Actions(): Actions {
     return Actions(this)
 }
 
 /**
  * 创建一个 Actions 对象, 可以进行鼠标键盘操作
  */
-inline fun ChromeDriver.actions(): Actions {
+ fun ChromeDriver.actions(): Actions {
     return Actions(this)
 }
 
@@ -262,7 +262,7 @@ inline fun ChromeDriver.actions(): Actions {
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
-inline fun ChromeDriver.WebDriverWait(
+ fun ChromeDriver.WebDriverWait(
     timeout: Duration,
     sleep: Duration = Duration.ofMillis(500L),
     clock: Clock = Clock.systemDefaultZone(),
@@ -276,7 +276,7 @@ inline fun ChromeDriver.WebDriverWait(
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
-inline fun ChromeDriver.WebDriverWait(
+ fun ChromeDriver.WebDriverWait(
     timeout: Long,
     sleep: Long = 500L,
     unit: ChronoUnit = ChronoUnit.MILLIS,
@@ -286,7 +286,7 @@ inline fun ChromeDriver.WebDriverWait(
     return WebDriverWait(this, Duration.of(timeout, unit), Duration.of(sleep, unit), clock, sleeper)
 }
 
-inline fun ChromeDriver.FluentWait(
+ fun ChromeDriver.FluentWait(
     timeout: Duration,
     pollingEvery: Duration = Duration.ofMillis(500L),
     message: String = "timeout",
@@ -299,7 +299,7 @@ inline fun ChromeDriver.FluentWait(
         .withMessage(message)
 }
 
-inline fun ChromeDriver.loadCss(@Language("css") css: String): CWindow {
+fun ChromeDriver.loadCss(@Language("css") css: String): CWindow {
     executeScript(
         """
         const style = document.createElement('style');
