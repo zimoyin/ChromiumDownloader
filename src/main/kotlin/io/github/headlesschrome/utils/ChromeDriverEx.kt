@@ -2,10 +2,12 @@ package io.github.headlesschrome.utils
 
 import kotlinx.coroutines.*
 import org.intellij.lang.annotations.Language
+import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
+import org.openqa.selenium.WebElement
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.logging.LogEntry
@@ -114,7 +116,7 @@ suspend fun ChromeDriver.blockUntilQuitSuspend(block: (suspend ChromeDriver.() -
 inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
     deleteWebDriverSign()
     Runtime.getRuntime().addShutdownHook(Thread {
-       kotlin.runCatching { quit() }
+        kotlin.runCatching { quit() }
     })
     block()
 }
@@ -384,3 +386,41 @@ fun WebDriver.deleteWebDriverSign() {
         )
     }
 }
+
+
+fun WebDriver.htmlAsWebElement(): WebElement {
+    return findElement(By.tagName("html"))
+}
+
+fun WebDriver.bodyAsWebElement(): WebElement {
+    return findElement(By.tagName("body"))
+}
+
+fun WebDriver.headerAsWebElement(): WebElement {
+    return findElement(By.tagName("head"))
+}
+
+fun WebDriver.findElementById(id: String): WebElement {
+    return findElement(By.id(id))
+}
+
+fun WebDriver.findElementByXpath(xpath: String): WebElement {
+    return findElement(By.xpath(xpath))
+}
+
+fun WebDriver.findElementsByXpath(xpath: String): List<WebElement> {
+    return findElements(By.xpath(xpath))
+}
+
+fun WebDriver.findElementsByClassName(className: String): List<WebElement> {
+    return findElements(By.className(className))
+}
+
+fun WebDriver.findElementsByTagName(tagName: String): List<WebElement> {
+    return findElements(By.tagName(tagName))
+}
+
+fun WebDriver.findElementsByCssSelector(cssSelector: String): List<WebElement> {
+    return findElements(By.cssSelector(cssSelector))
+}
+

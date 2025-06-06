@@ -52,7 +52,7 @@ fun List<CWindow>.newWindow(url: String = "about:blank", switchTo: Boolean = tru
     return first().newWindow(url, switchTo)
 }
 
-fun List<CWindow>.closeWindow(windowHandleID: String){
+fun List<CWindow>.closeWindow(windowHandleID: String) {
     for (cw in this) {
         if (windowHandleID == cw.windowHandleID) cw.close()
     }
@@ -299,8 +299,44 @@ open class CWindow(
         return this
     }
 
+    fun htmlAsWebElement(): WebElement = aroundWindow {
+        return@aroundWindow findElement(By.tagName("html"))
+    }
+
+    fun bodyAsWebElement(): WebElement = aroundWindow {
+        return@aroundWindow findElement(By.tagName("body"))
+    }
+
+    fun headerAsWebElement(): WebElement = aroundWindow {
+        return@aroundWindow findElement(By.tagName("head"))
+    }
+
+    fun findElementById(id: String): WebElement = aroundWindow {
+        return@aroundWindow findElement(By.id(id))
+    }
+
+    fun findElementByXpath(xpath: String): WebElement = aroundWindow {
+        return@aroundWindow findElement(By.xpath(xpath))
+    }
+
+    fun findElementsByXpath(xpath: String): List<WebElement> = aroundWindow {
+        return@aroundWindow findElements(By.xpath(xpath))
+    }
+
+    fun findElementsByClassName(className: String): List<WebElement> = aroundWindow {
+        return@aroundWindow findElements(By.className(className))
+    }
+
+    fun findElementsByTagName(tagName: String): List<WebElement> = aroundWindow {
+        return@aroundWindow findElements(By.tagName(tagName))
+    }
+
+    fun findElementsByCssSelector(cssSelector: String): List<WebElement> = aroundWindow {
+        return@aroundWindow findElements(By.cssSelector(cssSelector))
+    }
+
     override fun findElements(by: By): List<WebElement> = aroundWindow {
-        driver.findElements(by)
+        return@aroundWindow driver.findElements(by)
     }
 
     override fun findElement(by: By): WebElement = aroundWindow {
