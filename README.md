@@ -128,7 +128,7 @@ ChromeDriver(options).blockUntilQuitSuspend {
 * blockUntilQuit 阻塞当前线程直到浏览器关闭
 * blockUntilQuitSuspend 阻塞当前协程直到浏览器关闭
 * finally JVM 关闭时退出浏览器
-* screenshotAsFile 报错截图到文件
+* screenshotAsFile 保存截图到文件，截图的主体可以是浏览器或者是DOM，只要是实现了 TakesScreenshot 的接口即可
 * screenshot 截图并返回指定类型（可以返回绝大部分类型）
 * deleteWebDriverSign 通过覆盖 `navigator.webdriver` 属性隐藏自动化特征
 * currentWindow 返回当前Tap或者Window 的封装

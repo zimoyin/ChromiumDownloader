@@ -5,6 +5,7 @@ import org.intellij.lang.annotations.Language
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
+import org.openqa.selenium.TakesScreenshot
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.WebElement
@@ -122,8 +123,8 @@ inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
 }
 
 
-inline fun ChromeDriver.screenshotAsFile(path: String? = null): File {
-    return screenshot<File>().let { if (path != null) it.copyTo(File(path), true) else it }
+inline fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
+    return screenshotAsT<File>().let { if (path != null) it.copyTo(File(path), true) else it }
 }
 
 
@@ -313,8 +314,16 @@ inline fun ChromeDriver.loadCss(@Language("css") css: String): CWindow {
  * 截图并返回对应类型的截图
  * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
  */
+@Deprecated("please use screenshotAsT()")
+inline fun <reified T : Any> TakesScreenshot.screenshot():T{
+    return screenshotAsT()
+}
+/**
+ * 截图并返回对应类型的截图
+ * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
+ */
 @OptIn(ExperimentalEncodingApi::class)
-inline fun <reified T : Any> ChromeDriver.screenshot(): T {
+inline fun <reified T : Any> TakesScreenshot.screenshotAsT(): T {
     return when (T::class.java) {
 
         ImageIO::class.java -> {

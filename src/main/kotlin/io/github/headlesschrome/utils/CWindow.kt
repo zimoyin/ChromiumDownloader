@@ -545,7 +545,7 @@ open class CWindow(
     }
 
     inline fun <reified T : Any> screenshotAsT(): T = aroundWindow {
-        return@aroundWindow driver.screenshot<T>()
+        return@aroundWindow driver.screenshotAsT<T>()
     }
 
     /**
