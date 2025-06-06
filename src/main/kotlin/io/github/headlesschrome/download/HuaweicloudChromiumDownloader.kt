@@ -22,7 +22,7 @@ import java.net.URL
  * @date : 2025/03/10
  */
 class HuaweicloudChromiumDownloader(
-    path: String = "./chrome",
+    path: String = CHROME_DOWNLOAD_PATH,
     positioner: Positioner = Positioner(Platform.currentPlatform(), "884014"),
     proxy: Proxy? = null,
     rootDir: File = File(path).resolve(positioner.revision),

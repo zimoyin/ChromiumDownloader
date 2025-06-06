@@ -20,7 +20,7 @@ import java.net.URL
 abstract class AbsChromiumDownloader(
     val positioner: Positioner,
     val proxy: Proxy? = null,
-    val path: String = "./chrome",
+    val path: String = CHROME_DOWNLOAD_PATH,
     val rootDir: File = File(path).resolve(positioner.revision),
     val appDir: File = rootDir.resolve("app"),
     val driverDir: File = rootDir.resolve("driver"),

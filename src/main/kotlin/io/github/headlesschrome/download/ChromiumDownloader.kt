@@ -13,6 +13,8 @@ import java.net.Proxy
 import java.net.URI
 import java.net.URL
 
+const val CHROME_DOWNLOAD_PATH = "./chrome"
+
 /**
  * ChromiumDownloader 是一个用于下载指定版本的 Chrome 浏览器及其驱动程序的工具类。
  * 它根据给定的平台和修订版号自动定位并下载适合的 Chrome 和 ChromeDriver 的二进制文件包，
@@ -33,7 +35,7 @@ import java.net.URL
 class ChromiumDownloader(
     proxy: Proxy? = null,
     positioner: Positioner = getLastPosition(proxy),
-    path: String = "./chrome",
+    path: String = CHROME_DOWNLOAD_PATH,
     rootDir: File = File(path).resolve(positioner.revision),
     appDir: File = rootDir.resolve("app"),
     driverDir: File = rootDir.resolve("driver"),
@@ -45,7 +47,7 @@ class ChromiumDownloader(
         host: String,
         port: Int,
         positioner: Positioner = getLastPosition(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, port))),
-        path: String = "./chrome",
+        path: String = CHROME_DOWNLOAD_PATH,
         rootDir: File = File(path).resolve(positioner.revision),
         appDir: File = rootDir.resolve("app"),
         driverDir: File = rootDir.resolve("driver"),

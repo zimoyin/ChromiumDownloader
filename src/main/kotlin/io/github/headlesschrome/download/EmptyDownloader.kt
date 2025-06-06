@@ -21,7 +21,7 @@ import java.net.URL
 class EmptyDownloader(
     proxy: Proxy? = null,
     positioner: Positioner = Positioner(Platform.currentPlatform(), "null"),
-    path: String = "./chrome",
+    path: String = CHROME_DOWNLOAD_PATH,
     rootDir: File = File(path).resolve(positioner.revision),
     appDir: File = rootDir.resolve("app"),
     driverDir: File = rootDir.resolve("driver"),

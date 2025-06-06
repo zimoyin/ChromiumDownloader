@@ -1,6 +1,7 @@
 package io.github.headlesschrome
 
 import io.github.headlesschrome.download.AbsChromiumDownloader
+import io.github.headlesschrome.download.CHROME_DOWNLOAD_PATH
 import io.github.headlesschrome.download.ChromiumDownloader
 import io.github.headlesschrome.location.Platform
 import io.github.headlesschrome.utils.setUserProfileDir
@@ -26,25 +27,25 @@ import kotlin.jvm.optionals.getOrDefault
  * @date : 2025/02/08
  */
 class ChromiumLoader(
-    var path: String = "./chrome",
+    var path: String = CHROME_DOWNLOAD_PATH,
     var platform: Platform = Platform.currentPlatform(),
     private val downloader0: AbsChromiumDownloader? = null,
     private val proxy: Proxy? = downloader0?.proxy,
 ) {
 
     init {
-        path = downloader0?.path ?: path
-        platform = downloader0?.positioner?.platform ?: platform
+        if (path == CHROME_DOWNLOAD_PATH) path = downloader0?.path ?: path
+        if (platform != Platform.currentPlatform()) platform = downloader0?.positioner?.platform ?: platform
     }
 
     constructor(
-        path: String = "./chrome",
+        path: String = CHROME_DOWNLOAD_PATH,
         platform: Platform = Platform.currentPlatform(),
         downloader0: AbsChromiumDownloader? = null,
     ) : this(path, platform, downloader0, downloader0?.proxy)
 
     constructor(
-        path: String = "./chrome",
+        path: String = CHROME_DOWNLOAD_PATH,
         downloader0: AbsChromiumDownloader? = null,
     ) : this(path, Platform.currentPlatform(), downloader0, downloader0?.proxy)
 
@@ -52,15 +53,15 @@ class ChromiumLoader(
     constructor(
         downloader0: AbsChromiumDownloader? = null,
         proxy: Proxy? = downloader0?.proxy,
-    ) : this("./chrome", Platform.currentPlatform(), downloader0, proxy)
+    ) : this(CHROME_DOWNLOAD_PATH, Platform.currentPlatform(), downloader0, proxy)
 
     constructor(
         proxy: Proxy? = null,
-    ) : this("./chrome", Platform.currentPlatform(), null, proxy)
+    ) : this(CHROME_DOWNLOAD_PATH, Platform.currentPlatform(), null, proxy)
 
     constructor(
         downloader0: AbsChromiumDownloader? = null,
-    ) : this("./chrome", Platform.currentPlatform(), downloader0)
+    ) : this(CHROME_DOWNLOAD_PATH, Platform.currentPlatform(), downloader0)
 
 
     val downloader: AbsChromiumDownloader by lazy {
@@ -107,7 +108,7 @@ class ChromiumLoader(
         @JvmOverloads
         fun downloadAndLoad(
             proxy: Proxy? = null,
-            path: String = "./chrome",
+            path: String = CHROME_DOWNLOAD_PATH,
             platform: Platform = Platform.currentPlatform(),
             downloader: AbsChromiumDownloader? = null,
             isPathMatchingEnabled: Boolean = false,
@@ -148,12 +149,12 @@ class ChromiumLoader(
         /**
          * 加载Chrome以及驱动
          */
-        fun load(path: String = "./chrome"): ChromeOptions {
+        fun load(path: String = CHROME_DOWNLOAD_PATH): ChromeOptions {
             System.setProperty("webdriver.chrome.driver", findChromeDriver(path))
             return ChromeOptions().setBinary(findChrome(path))
         }
 
-        fun findChrome(path: String = "./chrome"): String {
+        fun findChrome(path: String = CHROME_DOWNLOAD_PATH): String {
             return when (Platform.currentPlatform()) {
                 Platform.Linux, Platform.Linux_x64 -> {
                     val userPath = Paths.get(path)
@@ -250,7 +251,7 @@ class ChromiumLoader(
         }
 
 
-        fun findChromeDriver(path: String = "./chrome"): String {
+        fun findChromeDriver(path: String = CHROME_DOWNLOAD_PATH): String {
             return when (Platform.currentPlatform()) {
                 Platform.Linux, Platform.Linux_x64 -> {
                     Files.walk(Paths.get(path))
@@ -297,7 +298,7 @@ class ChromiumLoader(
             return driver.capabilities.browserVersion
         }
 
-        fun getChromeVersion(chromePath: String = "./chrome"): String {
+        fun getChromeVersion(chromePath: String = CHROME_DOWNLOAD_PATH): String {
             val executable = if (File(chromePath).isFile) chromePath else findChrome()
             val command = if (Platform.currentPlatform() == Platform.Win) {
                 listOf("powershell", "-command", "&{(Get-Item '$executable').VersionInfo.ProductVersion}")
