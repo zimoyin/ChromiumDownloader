@@ -26,12 +26,16 @@ import kotlin.jvm.optionals.getOrDefault
  * @date : 2025/02/08
  */
 class ChromiumLoader(
-    val path: String = "./chrome",
-    val platform: Platform = Platform.currentPlatform(),
+    var path: String = "./chrome",
+    var platform: Platform = Platform.currentPlatform(),
     private val downloader0: AbsChromiumDownloader? = null,
     private val proxy: Proxy? = downloader0?.proxy,
 ) {
 
+    init {
+        path = downloader0?.path ?: path
+        platform = downloader0?.positioner?.platform ?: platform
+    }
 
     constructor(
         path: String = "./chrome",
