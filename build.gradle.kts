@@ -3,19 +3,25 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     kotlin("jvm") version "2.1.0"
     id("com.vanniktech.maven.publish") version "0.30.0"
+    kotlin("plugin.serialization") version "2.1.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 description = "Chromium Downloader"
 group = "io.github.zimoyin"
-version = "1.2.27"
+version = "1.2.28"
 
 repositories {
     mavenCentral()
 }
 
+val slf4jVersion = "2.0.9"
 dependencies {
+//    implementation("org.slf4j:slf4j-nop:${slf4jVersion}")
+//    testImplementation("org.slf4j:slf4j-simple:2.0.17")
+
     testImplementation(kotlin("test"))
-    implementation("org.seleniumhq.selenium:selenium-java:4.29.0")
+    api("org.seleniumhq.selenium:selenium-java:4.29.0")
     implementation("com.google.guava:guava:33.4.0-jre")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 }
