@@ -129,7 +129,7 @@ ChromeDriver(options).blockUntilQuitSuspend {
 * blockUntilQuitSuspend 阻塞当前协程直到浏览器关闭
 * finally JVM 关闭时退出浏览器
 * screenshotAsFile 保存截图到文件，截图的主体可以是浏览器或者是DOM，只要是实现了 TakesScreenshot 的接口即可
-* screenshot 截图并返回指定类型（可以返回绝大部分类型）
+* screenshotAs 截图并返回指定类型（可以返回绝大部分类型）
 * deleteWebDriverSign 通过覆盖 `navigator.webdriver` 属性隐藏自动化特征
 * currentWindow 返回当前Tap或者Window 的封装
 * windows 返回所有窗口的封装（封装的窗口对象可以不切换到窗口就可进行操作）
@@ -137,6 +137,7 @@ ChromeDriver(options).blockUntilQuitSuspend {
 * logs 返回日志
 * load 加载网页文件或者加载网页源码
 * get 各种重载
+* findElementWithWait 等待元素加载后获取元素，超时则抛出异常
 
 ## Kotlin ChromeOptions 拓展方法
 * 略
