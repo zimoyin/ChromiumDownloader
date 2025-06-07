@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import org.intellij.lang.annotations.Language
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
+import org.openqa.selenium.NotFoundException
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.TakesScreenshot
 import org.openqa.selenium.WebDriver
@@ -13,9 +14,11 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.logging.LogEntry
 import org.openqa.selenium.logging.LogType
+import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.FluentWait
 import org.openqa.selenium.support.ui.Sleeper
 import org.openqa.selenium.support.ui.WebDriverWait
+import java.awt.SystemColor.window
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -38,11 +41,11 @@ inline fun ChromeDriver.onCreateWindow(crossinline block: suspend CWindow.() -> 
     return CoroutineScope(Dispatchers.IO).launch {
         val list = mutableSetOf<String>()
         while (true) {
-            kotlin.runCatching {
+            runCatching {
                 for (id in windowHandles.iterator()) {
                     if (!list.contains(id)) {
                         list.add(id)
-                        kotlin.runCatching { CWindow(this@onCreateWindow, id).block() }
+                        runCatching { CWindow(this@onCreateWindow, id).block() }
                     }
                 }
                 list.clear()
@@ -67,7 +70,7 @@ inline fun ChromeDriver.use(block: ChromeDriver.() -> Unit) {
     }
 }
 
- fun ChromeDriver.isQuit(): Boolean {
+fun ChromeDriver.isQuit(): Boolean {
     return try {
         windowHandles.isEmpty()
     } catch (e: WebDriverException) {
@@ -117,13 +120,13 @@ suspend fun ChromeDriver.blockUntilQuitSuspend(block: (suspend ChromeDriver.() -
 inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
     deleteWebDriverSign()
     Runtime.getRuntime().addShutdownHook(Thread {
-        kotlin.runCatching { quit() }
+        runCatching { quit() }
     })
     block()
 }
 
 
- fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
+fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
     return screenshotAsT<File>().let { if (path != null) it.copyTo(File(path), true) else it }
 }
 
@@ -134,7 +137,7 @@ inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
  * @param logType 日志类型
  * @param level 日志等级
  */
- fun ChromeDriver.logs(logType: String = LogType.BROWSER, level: Level = Level.ALL): List<LogEntry> {
+fun ChromeDriver.logs(logType: String = LogType.BROWSER, level: Level = Level.ALL): List<LogEntry> {
     return manage().logs().get(logType).filter { it.level.intValue() >= level.intValue() }
 }
 
@@ -166,23 +169,23 @@ inline fun ChromeDriver.logListener(
 /**
  * 打开指定连接，如果没有则打开空窗体
  */
- fun ChromeDriver.get(url: String? = "about:blank", isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.get(url: String? = "about:blank", isNewTab: Boolean = false): CWindow {
     if (isNewTab) this.window.newTab().switchToThis()
     get(url ?: "about:blank")
     return window
 }
 
- fun ChromeDriver.get(url: URL, isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.get(url: URL, isNewTab: Boolean = false): CWindow {
     get(url.toString(), isNewTab)
     return window
 }
 
- fun ChromeDriver.get(file: File, isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.get(file: File, isNewTab: Boolean = false): CWindow {
     get(file.toURI().toURL().toString(), isNewTab)
     return window
 }
 
- fun ChromeDriver.get(url: URI, isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.get(url: URI, isNewTab: Boolean = false): CWindow {
     get(url.toURL(), isNewTab)
     return window
 }
@@ -190,7 +193,7 @@ inline fun ChromeDriver.logListener(
 /**
  * 加载 HTML
  */
- fun ChromeDriver.load(@Language("html") html: String, isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.load(@Language("html") html: String, isNewTab: Boolean = false): CWindow {
     if (isNewTab) this.window.newTab().switchToThis()
     // 打开一个空白页面
     get("about:blank")
@@ -199,17 +202,17 @@ inline fun ChromeDriver.logListener(
     return window
 }
 
- fun ChromeDriver.load(file: File, isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.load(file: File, isNewTab: Boolean = false): CWindow {
     get(file, isNewTab)
     return window
 }
 
- fun ChromeDriver.load(url: URL, isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.load(url: URL, isNewTab: Boolean = false): CWindow {
     get(url, isNewTab)
     return window
 }
 
- fun ChromeDriver.load(url: URI, isNewTab: Boolean = false): CWindow {
+fun ChromeDriver.load(url: URI, isNewTab: Boolean = false): CWindow {
     get(url, isNewTab)
     return window
 }
@@ -219,7 +222,7 @@ inline fun ChromeDriver.logListener(
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
- fun ChromeDriver.wait(
+fun ChromeDriver.wait(
     timeout: Duration,
     sleep: Duration = Duration.ofMillis(500L),
     clock: Clock = Clock.systemDefaultZone(),
@@ -233,7 +236,7 @@ inline fun ChromeDriver.logListener(
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
- fun ChromeDriver.wait(
+fun ChromeDriver.wait(
     timeout: Long,
     sleep: Long = 500L,
     unit: ChronoUnit = ChronoUnit.MILLIS,
@@ -246,14 +249,14 @@ inline fun ChromeDriver.logListener(
 /**
  * 创建一个 Actions 对象, 可以进行鼠标键盘操作
  */
- fun ChromeDriver.Actions(): Actions {
+fun ChromeDriver.Actions(): Actions {
     return Actions(this)
 }
 
 /**
  * 创建一个 Actions 对象, 可以进行鼠标键盘操作
  */
- fun ChromeDriver.actions(): Actions {
+fun ChromeDriver.actions(): Actions {
     return Actions(this)
 }
 
@@ -262,7 +265,7 @@ inline fun ChromeDriver.logListener(
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
- fun ChromeDriver.WebDriverWait(
+fun ChromeDriver.WebDriverWait(
     timeout: Duration,
     sleep: Duration = Duration.ofMillis(500L),
     clock: Clock = Clock.systemDefaultZone(),
@@ -276,7 +279,7 @@ inline fun ChromeDriver.logListener(
  * WebDriverWait + executeScript
  * WebDriverWait + ExpectedConditions
  */
- fun ChromeDriver.WebDriverWait(
+fun ChromeDriver.WebDriverWait(
     timeout: Long,
     sleep: Long = 500L,
     unit: ChronoUnit = ChronoUnit.MILLIS,
@@ -286,7 +289,7 @@ inline fun ChromeDriver.logListener(
     return WebDriverWait(this, Duration.of(timeout, unit), Duration.of(sleep, unit), clock, sleeper)
 }
 
- fun ChromeDriver.FluentWait(
+fun ChromeDriver.FluentWait(
     timeout: Duration,
     pollingEvery: Duration = Duration.ofMillis(500L),
     message: String = "timeout",
@@ -315,9 +318,10 @@ fun ChromeDriver.loadCss(@Language("css") css: String): CWindow {
  * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
  */
 @Deprecated("please use screenshotAsT()")
-inline fun <reified T : Any> TakesScreenshot.screenshot():T{
+inline fun <reified T : Any> TakesScreenshot.screenshot(): T {
     return screenshotAsT()
 }
+
 /**
  * 截图并返回对应类型的截图
  * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
@@ -383,7 +387,7 @@ inline fun <reified T : Any> TakesScreenshot.screenshotAsT(): T {
 }
 
 fun WebDriver.deleteWebDriverSign() {
-    kotlin.runCatching {
+    runCatching {
         val js = this as JavascriptExecutor
         // 方法 2: 覆盖 getter（推荐）
         js.executeScript(
@@ -431,6 +435,62 @@ fun WebDriver.findElementsByTagName(tagName: String): List<WebElement> {
 
 fun WebDriver.findElementsByCssSelector(cssSelector: String): List<WebElement> {
     return findElements(By.cssSelector(cssSelector))
+}
+
+
+/**
+ * 等待元素可见的时候获取元素
+ * @param timeout 超时时间
+ * @param by By
+ * @return WebElement
+ */
+fun ChromeDriver.findElementWithWait(by: By, timeout: Long = 5 * 1000): WebElement {
+    return runCatching {
+        wait(timeout).until(
+            ExpectedConditions.visibilityOfElementLocated(by)
+        )
+    }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
+}
+
+/**
+ * 等待元素可见的时候获取元素
+ * @param timeout 超时时间
+ * @param by By
+ */
+fun ChromeDriver.findElementsWithWait(by: By, timeout: Long = 5 * 1000): List<WebElement> {
+    return runCatching {
+        wait(timeout).until(
+            ExpectedConditions.visibilityOfAllElementsLocatedBy(by)
+        )
+    }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
+}
+
+
+/**
+ * 等待元素可见的时候获取元素
+ * @param timeout 超时时间
+ * @param by By
+ * @return WebElement
+ */
+fun ChromeDriver.findElementWithWait(by: By, timeout: Duration = Duration.ofSeconds(5)): WebElement {
+    return runCatching {
+        wait(timeout).until(
+            ExpectedConditions.visibilityOfElementLocated(by)
+        )
+    }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
+}
+
+/**
+ * 等待元素可见的时候获取元素
+ * @param timeout 超时时间
+ * @param by By
+ */
+fun ChromeDriver.findElementsWithWait(by: By, timeout: Duration = Duration.ofSeconds(5)): List<WebElement> {
+    return runCatching {
+        wait(timeout).until(
+            ExpectedConditions.visibilityOfAllElementsLocatedBy(by)
+        )
+    }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
 }
 
 val WebDriver.html: String

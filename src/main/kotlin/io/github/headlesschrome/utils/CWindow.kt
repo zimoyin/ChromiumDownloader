@@ -8,9 +8,11 @@ import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.logging.LogEntries
 import org.openqa.selenium.logging.LogEntry
 import org.openqa.selenium.logging.LogType
+import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.FluentWait
 import org.openqa.selenium.support.ui.Sleeper
 import org.openqa.selenium.support.ui.WebDriverWait
+import java.awt.SystemColor.window
 import java.io.File
 import java.time.Clock
 import java.time.Duration
@@ -340,6 +342,61 @@ open class CWindow(
         return@aroundWindow findElements(By.cssSelector(cssSelector))
     }
 
+    /**
+     * 等待元素可见的时候获取元素
+     * @param timeout 超时时间
+     * @param by By
+     * @return WebElement
+     */
+    fun findElementWithWait(by: By, timeout: Long = 5 * 1000): WebElement = aroundWindow {
+        return@aroundWindow runCatching {
+            window.wait(timeout).until(
+                ExpectedConditions.visibilityOfElementLocated(by)
+            )
+        }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
+    }
+
+    /**
+     * 等待元素可见的时候获取元素
+     * @param timeout 超时时间
+     * @param by By
+     */
+    fun findElementsWithWait(by: By, timeout: Long = 5 * 1000): List<WebElement> = aroundWindow {
+        return@aroundWindow runCatching {
+            window.wait(timeout).until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(by)
+            )
+        }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
+    }
+
+
+    /**
+     * 等待元素可见的时候获取元素
+     * @param timeout 超时时间
+     * @param by By
+     * @return WebElement
+     */
+    fun findElementWithWait(by: By, timeout: Duration = Duration.ofSeconds(5)): WebElement = aroundWindow {
+        return@aroundWindow runCatching {
+            window.wait(timeout).until(
+                ExpectedConditions.visibilityOfElementLocated(by)
+            )
+        }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
+    }
+
+    /**
+     * 等待元素可见的时候获取元素
+     * @param timeout 超时时间
+     * @param by By
+     */
+    fun findElementsWithWait(by: By, timeout: Duration = Duration.ofSeconds(5)): List<WebElement> = aroundWindow {
+        return@aroundWindow runCatching {
+            window.wait(timeout).until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(by)
+            )
+        }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
+    }
+
     override fun findElements(by: By): List<WebElement> = aroundWindow {
         return@aroundWindow driver.findElements(by)
     }
@@ -414,12 +471,12 @@ open class CWindow(
     }
 
     @Deprecated("请使用 frame(WebElement)")
-    fun switchToFrame(frame: WebElement) =  driver.switchTo().frame(frame)
+    fun switchToFrame(frame: WebElement) = driver.switchTo().frame(frame)
 
     @Deprecated("请使用 frame(WebElement)")
     fun switchToFrame(frameIndex: Int) = driver.switchTo().frame(frameIndex)
 
-    fun frame(frame: WebElement,callback: WebDriver.() -> Unit) = aroundWindow {
+    fun frame(frame: WebElement, callback: WebDriver.() -> Unit) = aroundWindow {
         callback(driver.switchTo().frame(frame))
     }
 
