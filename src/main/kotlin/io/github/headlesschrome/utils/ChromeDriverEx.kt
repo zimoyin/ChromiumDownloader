@@ -493,5 +493,16 @@ fun ChromeDriver.findElementsWithWait(by: By, timeout: Duration = Duration.ofSec
     }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
 }
 
+/**
+ * 获取指定位置的元素
+ */
+fun WebDriver.getElementAtPosition(x: Int, y: Int): WebElement {
+    return (this as JavascriptExecutor).executeScript(
+        "return document.elementFromPoint(arguments[0], arguments[1]);",
+        x,
+        y
+    ) as WebElement
+}
+
 val WebDriver.html: String
     get() = pageSource as String

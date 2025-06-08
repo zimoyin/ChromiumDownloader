@@ -397,6 +397,17 @@ open class CWindow(
         }.getOrElse { throw NoSuchElementException("Not  found element: $by") }
     }
 
+    /**
+     * 通过坐标获取元素
+     */
+    fun getElementAtPosition(x: Int, y: Int): WebElement = aroundWindow {
+        (driver as JavascriptExecutor).executeScript(
+            "return document.elementFromPoint(arguments[0], arguments[1]);",
+            x,
+            y
+        ) as WebElement
+    }
+
     override fun findElements(by: By): List<WebElement> = aroundWindow {
         return@aroundWindow driver.findElements(by)
     }

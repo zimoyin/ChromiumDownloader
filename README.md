@@ -138,6 +138,7 @@ ChromeDriver(options).blockUntilQuitSuspend {
 * load 加载网页文件或者加载网页源码
 * get 各种重载
 * findElementWithWait 等待元素加载后获取元素，超时则抛出异常
+* getElementAtPosition 获取指定位置的元素
 
 ## Kotlin ChromeOptions 拓展方法
 * 略

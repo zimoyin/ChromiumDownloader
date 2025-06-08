@@ -1,8 +1,9 @@
 package io.github.headlesschrome.utils
 
 import org.openqa.selenium.By
-import org.openqa.selenium.By.id
+import org.openqa.selenium.Dimension
 import org.openqa.selenium.JavascriptExecutor
+import org.openqa.selenium.Point
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
 
@@ -51,4 +52,24 @@ fun WebElement.innerHTML(driver: WebDriver): String {
 val WebElement.parent: WebElement?
     get() = runCatching { findElement(By.xpath("./..")) }.getOrNull()
 
+
+/**
+ * 判断元素是否可点击
+ */
+fun WebElement.isElementClickable(driver: WebDriver): Boolean {
+    // 获取元素的位置和大小
+    val location: Point = getLocation()
+    val size: Dimension = getSize()
+
+    // 计算元素的中心点坐标
+    val x: Int = location.getX() + size.getWidth() / 2
+    val y: Int = location.getY() + size.getHeight() / 2
+
+    // 使用 JavaScript 获取该坐标点的最上层元素
+    val script = "return document.elementFromPoint(arguments[0], arguments[1]);"
+    val topElement = (driver as JavascriptExecutor).executeScript(script, x, y) as WebElement?
+
+    // 判断该元素是否为目标元素
+    return topElement == this
+}
 
