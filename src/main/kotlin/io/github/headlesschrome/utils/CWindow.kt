@@ -73,11 +73,16 @@ open class CWindow(
     var isSynchronized: Boolean = true,
 ) : WebDriver {
 
-    init {
-        deleteWebDriverSign()
+    companion object {
+        @JvmStatic
+        var autoExecuteDeleteWebDriverSign = false
     }
 
-    fun deleteWebDriverSign() {
+    init {
+        if (autoExecuteDeleteWebDriverSign) deleteWebDriverSign()
+    }
+
+    fun deleteWebDriverSign() = aroundWindow {
         driver.deleteWebDriverSign()
     }
 
@@ -113,6 +118,10 @@ open class CWindow(
         }
 
     val cookieManager: CookieManager = CookieManager(this)
+
+
+    val scrollSize:Dimension
+        get() = aroundWindow { driver.scrollSize }
 
     /**
      * 获取当前窗口的日志
@@ -637,6 +646,7 @@ open class CWindow(
      * 创建 Actions 用于模拟鼠标键盘操作。只针对当前窗口，如果在操作过程中出现窗口切换会导致操作失误
      */
     fun actions(block: CWindow.(Actions) -> Unit) = aroundWindow {
+
         block(Actions(driver))
     }
 
@@ -662,27 +672,22 @@ open class CWindow(
     }
 
     fun fullscreen() = aroundWindow {
-        driver.switchTo().window(windowHandleID)
         driver.manage().window().fullscreen()
     }
 
     fun maximize() = aroundWindow {
-        driver.switchTo().window(windowHandleID)
         driver.manage().window().maximize()
     }
 
     fun minimize() = aroundWindow {
-        driver.switchTo().window(windowHandleID)
         driver.manage().window().minimize()
     }
 
     fun resize(width: Int, height: Int) = aroundWindow {
-        driver.switchTo().window(windowHandleID)
         driver.manage().window().size = Dimension(width, height)
     }
 
     override fun close() = aroundWindow {
-        driver.switchTo().window(windowHandleID)
         driver.close()
     }
 

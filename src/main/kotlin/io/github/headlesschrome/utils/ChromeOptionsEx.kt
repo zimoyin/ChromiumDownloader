@@ -207,10 +207,11 @@ fun ChromeOptions.disableNotifications(): ChromeOptions {
 }
 
 /**
- * 启用自动化通知
+ * 禁用自动化通知
  */
 fun ChromeOptions.enableAutomation(): ChromeOptions {
-    addArguments("--enable-automation")
+    setExperimentalOption("excludeSwitches", listOf("enable-automation"))
+    setExperimentalOption("useAutomationExtension", false)
     return this
 }
 

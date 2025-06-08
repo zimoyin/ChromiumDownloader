@@ -1,10 +1,11 @@
 package io.github.headlesschrome.utils
 
+import io.github.headlesschrome.download.HuaweicloudChromiumDownloader
 import kotlinx.coroutines.*
 import org.intellij.lang.annotations.Language
 import org.openqa.selenium.By
+import org.openqa.selenium.Dimension
 import org.openqa.selenium.JavascriptExecutor
-import org.openqa.selenium.NotFoundException
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.TakesScreenshot
 import org.openqa.selenium.WebDriver
@@ -18,7 +19,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.FluentWait
 import org.openqa.selenium.support.ui.Sleeper
 import org.openqa.selenium.support.ui.WebDriverWait
-import java.awt.SystemColor.window
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -63,7 +63,6 @@ inline fun ChromeDriver.onCreateWindow(crossinline block: suspend CWindow.() -> 
  */
 inline fun ChromeDriver.use(block: ChromeDriver.() -> Unit) {
     try {
-        deleteWebDriverSign()
         block()
     } finally {
         quit()
@@ -118,18 +117,11 @@ suspend fun ChromeDriver.blockUntilQuitSuspend(block: (suspend ChromeDriver.() -
  * 在JVM关闭时退出浏览器
  */
 inline fun ChromeDriver.finally(block: (ChromeDriver.() -> Unit) = { }) {
-    deleteWebDriverSign()
     Runtime.getRuntime().addShutdownHook(Thread {
         runCatching { quit() }
     })
     block()
 }
-
-
-fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
-    return screenshotAsT<File>().let { if (path != null) it.copyTo(File(path), true) else it }
-}
-
 
 /**
  * 获取日志
@@ -314,78 +306,8 @@ fun ChromeDriver.loadCss(@Language("css") css: String): CWindow {
 }
 
 /**
- * 截图并返回对应类型的截图
- * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
+ * 删除当前页面 WebDriver 标识
  */
-@Deprecated("please use screenshotAsT()")
-inline fun <reified T : Any> TakesScreenshot.screenshot(): T {
-    return screenshotAsT()
-}
-
-/**
- * 截图并返回对应类型的截图
- * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
- */
-@OptIn(ExperimentalEncodingApi::class)
-inline fun <reified T : Any> TakesScreenshot.screenshotAsT(): T {
-    return when (T::class.java) {
-
-        ImageIO::class.java -> {
-            ImageIO.read(getScreenshotAs<File>(OutputType.FILE)) as T
-        }
-
-        Path::class.java -> {
-            getScreenshotAs<File>(OutputType.FILE).toPath() as T
-        }
-
-        URL::class.java -> {
-            getScreenshotAs<File>(OutputType.FILE).toURI().toURL() as T
-        }
-
-        URI::class.java -> {
-            getScreenshotAs<File>(OutputType.FILE).toURI() as T
-        }
-
-        Base64::class.java -> {
-            getScreenshotAs<String>(OutputType.BASE64) as T
-        }
-
-        kotlin.io.encoding.Base64::class.java -> {
-            Base64.getEncoder().encodeToString(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
-        }
-
-        Base64::getEncoder::class.java -> {
-            Base64.getEncoder().encodeToString(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
-        }
-
-        BufferedImage::class.java -> {
-            ImageIO.read(getScreenshotAs<File>(OutputType.FILE)) as T
-        }
-
-        String::class.java -> {
-            getScreenshotAs<String>(OutputType.BASE64) as T
-        }
-
-        File::class.java -> {
-            getScreenshotAs<File>(OutputType.FILE) as T
-        }
-
-        ByteArray::class.java -> {
-            getScreenshotAs<ByteArray>(OutputType.BYTES) as T
-        }
-
-        InputStream::class.java -> {
-            ByteArrayInputStream(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
-        }
-
-        Any::class.java -> {
-            getScreenshotAs<String>(OutputType.BASE64) as T
-        }
-
-        else -> throw IllegalArgumentException("Unsupported type: ${T::class.java}")
-    }
-}
-
 fun WebDriver.deleteWebDriverSign() {
     runCatching {
         val js = this as JavascriptExecutor
@@ -503,6 +425,30 @@ fun WebDriver.getElementAtPosition(x: Int, y: Int): WebElement {
         y
     ) as WebElement
 }
+
+/**
+ * 注入脚本链接
+ */
+fun ChromeDriver.injectionScriptTag(url: String) {
+    executeScript(
+        """
+                    var script = document.createElement('script');
+                    script.src = '$url'; 
+                    script.type = 'text/javascript';
+                    document.head.appendChild(script);
+                """.trimIndent()
+    )
+}
+
+
+val WebDriver.scrollSize: Dimension
+    get() = Dimension(
+        ((this as JavascriptExecutor).executeScript("return document.body.scrollWidth;") as Long).toInt(),
+        ((this as JavascriptExecutor).executeScript("return document.body.scrollHeight;") as Long).toInt()
+    )
+
+val WebDriver.userAgent: String
+    get() = (this as JavascriptExecutor).executeScript("return navigator.userAgent;") as String
 
 val WebDriver.html: String
     get() = pageSource as String

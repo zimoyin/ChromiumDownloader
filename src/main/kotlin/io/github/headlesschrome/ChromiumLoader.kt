@@ -43,9 +43,9 @@ class ChromiumLoader(
     }
 
     constructor(
-        path: String = CHROME_DOWNLOAD_PATH,
+        scanPath: String = CHROME_DOWNLOAD_PATH,
         downloader0: AbsChromiumDownloader? = null,
-    ) : this(path, downloader0, downloader0?.proxy)
+    ) : this(scanPath, downloader0, downloader0?.proxy)
 
     constructor(
         downloader0: AbsChromiumDownloader? = null,

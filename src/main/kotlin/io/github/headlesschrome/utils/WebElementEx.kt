@@ -6,6 +6,8 @@ import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.Point
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
+import org.openqa.selenium.WrapsDriver
+import org.openqa.selenium.remote.RemoteWebElement
 
 /**
  *
@@ -39,12 +41,14 @@ fun WebElement.findElementsByCssSelector(cssSelector: String): List<WebElement> 
 val WebElement.children: List<WebElement>
     get() = findElements(By.xpath("./*"))
 
-fun WebElement.html(driver: WebDriver): String {
+@OptIn(ExperimentalStdlibApi::class)
+fun WebElement.html(driver: WebDriver = this.driver): String {
     val js = driver as JavascriptExecutor
     return js.executeScript("return arguments[0].outerHTML;", this) as String
 }
 
-fun WebElement.innerHTML(driver: WebDriver): String {
+@OptIn(ExperimentalStdlibApi::class)
+fun WebElement.innerHTML(driver: WebDriver = this.driver): String {
     val js = driver as JavascriptExecutor
     return js.executeScript("return arguments[0].innerHTML;", this) as String
 }
@@ -53,10 +57,15 @@ val WebElement.parent: WebElement?
     get() = runCatching { findElement(By.xpath("./..")) }.getOrNull()
 
 
+@ExperimentalStdlibApi
+val WebElement.driver: WebDriver
+    get() = (this as RemoteWebElement).wrappedDriver
+
 /**
  * 判断元素是否可点击
  */
-fun WebElement.isElementClickable(driver: WebDriver): Boolean {
+@OptIn(ExperimentalStdlibApi::class)
+fun WebElement.isElementClickable(driver: WebDriver = this.driver): Boolean {
     // 获取元素的位置和大小
     val location: Point = getLocation()
     val size: Dimension = getSize()

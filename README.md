@@ -139,6 +139,13 @@ ChromeDriver(options).blockUntilQuitSuspend {
 * get 各种重载
 * findElementWithWait 等待元素加载后获取元素，超时则抛出异常
 * getElementAtPosition 获取指定位置的元素
+* fullScreenshotAsT 获取全屏截图并返回指定类型
 
 ## Kotlin ChromeOptions 拓展方法
 * 略
+
+## 关于一些知识
+1. 无头浏览器设置无头后 UA 中会存在 HeadlessChrome 标识，需要手动设置 UA 防止被检测到
+2. 可以通过 ChromeOptions.enableAutomation 来关掉自动化标识
+3. 可以调用 WebDriver.deleteWebDriverSign 隐藏浏览器当前页面的 navigator.webdriver 属性
+4. 可以设置 CWindow.autoExecuteDeleteWebDriverSign = true 来设置每个窗口自带执行 DeleteWebDriverSign

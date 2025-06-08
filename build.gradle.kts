@@ -21,7 +21,14 @@ dependencies {
 //    testImplementation("org.slf4j:slf4j-simple:2.0.17")
 
     testImplementation(kotlin("test"))
-    api("org.seleniumhq.selenium:selenium-java:4.29.0")
+    api("org.seleniumhq.selenium:selenium-java:4.33.0")
+    implementation("ru.yandex.qatools.ashot:ashot:1.5.4"){
+        exclude("org.seleniumhq.selenium:selenium-remote-driver")
+        exclude("commons-io:commons-io")
+        exclude("com.google.code.gson:gson")
+    }
+    implementation("com.google.code.gson:gson:2.13.1")
+    implementation("commons-io:commons-io:2.15.0")
     implementation("com.google.guava:guava:33.4.0-jre")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 }
