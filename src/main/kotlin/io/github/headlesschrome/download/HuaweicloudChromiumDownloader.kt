@@ -1,6 +1,5 @@
 package io.github.headlesschrome.download
 
-import io.github.headlesschrome.download.ChromiumDownloader.Companion.createURL
 import io.github.headlesschrome.location.Platform
 import io.github.headlesschrome.location.Positioner
 import io.github.headlesschrome.utils.Zip
@@ -39,11 +38,7 @@ class HuaweicloudChromiumDownloader(
         initAppDir()
         val url = createURL(positioner.platform, positioner.revision, fileName)
         val zip = File(appDir, fileName)
-        url.connection(proxy).getInputStream().use { input ->
-            zip.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
+        url.connection(proxy).copyTo(zip, DownloadState.Type.CHROME)
         Zip.unzip(zip)
         zip.delete()
     }
@@ -70,11 +65,7 @@ class HuaweicloudChromiumDownloader(
         initDriverDir()
         val url = createURL(null, driverVersion, fileName, BASE_URL_DRIVER)
         val zip = File(driverDir, fileName)
-        url.connection(proxy).getInputStream().use { input ->
-            zip.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
+        url.connection(proxy).copyTo(zip,DownloadState.Type.DRIVER)
         Zip.unzip(zip)
         zip.delete()
     }
@@ -88,7 +79,7 @@ class HuaweicloudChromiumDownloader(
             platform: Platform? = Platform.currentPlatform(),
             revision: String = "",
             fileName: String = "",
-            base: String = BASE_URL_CHROME
+            base: String = BASE_URL_CHROME,
         ): URL {
             return URI.create("$base${platform?.name ?: ""}/${revision}/$fileName").toURL()
         }
@@ -142,13 +133,13 @@ class HuaweicloudChromiumDownloader(
 
     data class ChromeDriver(
         val version: String,
-        val items: List<Item>
+        val items: List<Item>,
     )
 
     data class Item(
         val positioner: Positioner,
         val path: String,
         val url: URL = URI.create("$BASE_URL_DRIVER$path").toURL(),
-        val fileName: String = File(path).name
+        val fileName: String = File(path).name,
     )
 }
