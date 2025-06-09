@@ -37,7 +37,7 @@ class HuaweicloudChromiumDownloader(
         }
         initAppDir()
         val url = createURL(positioner.platform, positioner.revision, fileName)
-        val zip = File(appDir, fileName)
+        val zip = File(this@HuaweicloudChromiumDownloader.appDir, fileName)
         url.connection(proxy).copyTo(zip, DownloadState.Type.CHROME)
         Zip.unzip(zip)
         zip.delete()
@@ -64,7 +64,7 @@ class HuaweicloudChromiumDownloader(
         }
         initDriverDir()
         val url = createURL(null, driverVersion, fileName, BASE_URL_DRIVER)
-        val zip = File(driverDir, fileName)
+        val zip = File(this@HuaweicloudChromiumDownloader.driverDir, fileName)
         url.connection(proxy).copyTo(zip,DownloadState.Type.DRIVER)
         Zip.unzip(zip)
         zip.delete()

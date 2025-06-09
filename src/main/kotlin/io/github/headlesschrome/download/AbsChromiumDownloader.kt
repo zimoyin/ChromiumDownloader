@@ -22,8 +22,8 @@ abstract class AbsChromiumDownloader(
     val downloadState: DownloadState = DownloadState(
         positioner,
         rootDir.absolutePath,
-        appDir.absolutePath,
-        driverDir.absolutePath,
+        this@AbsChromiumDownloader.appDir.absolutePath,
+        this@AbsChromiumDownloader.driverDir.absolutePath,
         proxy,
     )
 
@@ -33,13 +33,13 @@ abstract class AbsChromiumDownloader(
     }
 
     fun initAppDir() {
-        appDir.mkdirs()
-        if (!appDir.exists()) throw RuntimeException("appDir not created")
+        this@AbsChromiumDownloader.appDir.mkdirs()
+        if (!this@AbsChromiumDownloader.appDir.exists()) throw RuntimeException("appDir not created")
     }
 
     fun initDriverDir() {
-        driverDir.mkdirs()
-        if (!driverDir.exists()) throw RuntimeException("driverDir not created")
+        this@AbsChromiumDownloader.driverDir.mkdirs()
+        if (!this@AbsChromiumDownloader.driverDir.exists()) throw RuntimeException("driverDir not created")
     }
 
     abstract fun downloadChrome()
@@ -70,8 +70,8 @@ abstract class AbsChromiumDownloader(
     class DownloadState(
         val positioner: Positioner,
         val rootDir: String,
-        val app: String,
-        val driver: String,
+        val appDir: String,
+        val driverDir: String,
         val proxy: Proxy? = null,
     ) {
         private val listeners: MutableList<(DownloadState) -> Unit> = mutableListOf()

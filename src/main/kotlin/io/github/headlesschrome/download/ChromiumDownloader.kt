@@ -72,7 +72,7 @@ class ChromiumDownloader(
         val regex = """^chrome-[a-z]+\.zip$""".toRegex()
         try {
             initAppDir()
-            download(regex, appDir, DownloadState.Type.CHROME)
+            download(regex, this@ChromiumDownloader.appDir, DownloadState.Type.CHROME)
         } catch (e: Exception) {
             throw RuntimeException(
                 "Unable to download chrome revision: ${positioner.revision} in platform: ${positioner.platform}",
@@ -85,7 +85,7 @@ class ChromiumDownloader(
         val regex = """^chromedriver_[a-zA-Z0-9]+\.zip$""".toRegex()
         try {
             initDriverDir()
-            download(regex, driverDir, DownloadState.Type.DRIVER)
+            download(regex, this@ChromiumDownloader.driverDir, DownloadState.Type.DRIVER)
         } catch (e: Exception) {
             throw RuntimeException(
                 "Unable to download chrome driver revision: ${positioner.revision} in platform: ${positioner.platform}",
