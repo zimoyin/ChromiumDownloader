@@ -12,6 +12,7 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.devtools.CdpVersionFinder
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.logging.LogEntry
 import org.openqa.selenium.logging.LogType
@@ -465,6 +466,8 @@ inline fun <reified T : Any> ChromeDriver.cdpFullPageScreenshotAs(): T {
     // 启用 Page 域
 //    executeCdpCommand("Page.enable", mapOf())
 
+    val optional = CdpVersionFinder().match(this.capabilities.browserVersion)!!
+    if (optional.isEmpty) throw RuntimeException("No CDP version found. Please check the browser version to select the correct CDP version")
     val params = mapOf("format" to "png", "captureBeyondViewport" to true)
     val response = executeCdpCommand("Page.captureScreenshot", params)
     val base64Image = (response["data"] as String).removePrefix("data:image/png;base64,")
