@@ -140,6 +140,7 @@ ChromeDriver(options).blockUntilQuitSuspend {
 * findElementWithWait 等待元素加载后获取元素，超时则抛出异常
 * getElementAtPosition 获取指定位置的元素
 * fullScreenshotAsT 获取全屏截图并返回指定类型
+* cdpFullPageScreenshotAsFile 使用CDP 获取全屏截图并保存到文件
 
 ## Kotlin ChromeOptions 拓展方法
 * 略
@@ -149,3 +150,4 @@ ChromeDriver(options).blockUntilQuitSuspend {
 2. 可以通过 ChromeOptions.enableAutomation 来关掉自动化标识
 3. 可以调用 WebDriver.deleteWebDriverSign 隐藏浏览器当前页面的 navigator.webdriver 属性
 4. 可以设置 CWindow.autoExecuteDeleteWebDriverSign = true 来设置每个窗口自带执行 DeleteWebDriverSign
+5. 下载通过 downloadState 可以监听下载状态

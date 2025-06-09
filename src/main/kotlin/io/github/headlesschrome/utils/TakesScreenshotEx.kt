@@ -1,5 +1,6 @@
 package io.github.headlesschrome.utils
 
+import com.sun.org.apache.xml.internal.security.utils.XMLUtils.encodeToString
 import org.openqa.selenium.*
 import org.openqa.selenium.remote.RemoteWebElement
 import ru.yandex.qatools.ashot.AShot
@@ -25,14 +26,9 @@ import kotlin.jvm.java
  * @date : 2025/06/09
  */
 
-
-fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
-    return screenshotAsT<File>().let { if (path != null) it.copyTo(File(path), true) else it }
-}
-
 /**
  * 截图并返回对应类型的截图
- * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
+ * * T = File | Path | URL | URI | File | ByteArray | InputStream | Any
  */
 @Deprecated("please use screenshotAsT()")
 inline fun <reified T : Any> TakesScreenshot.screenshot(): T {
@@ -41,15 +37,13 @@ inline fun <reified T : Any> TakesScreenshot.screenshot(): T {
 
 /**
  * 截图并返回对应类型的截图
- * * T = File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | File | ByteArray | InputStream | Any
+ * * T = File | Path | URL | URI | String(Base64) | File | ByteArray | InputStream | Any
  */
 @OptIn(ExperimentalEncodingApi::class)
 inline fun <reified T : Any> TakesScreenshot.screenshotAsT(): T {
     return when (T::class.java) {
 
-        ImageIO::class.java -> {
-            ImageIO.read(getScreenshotAs<File>(OutputType.FILE)) as T
-        }
+        ImageIO::class.java -> ImageIO.read(getScreenshotAs<File>(OutputType.FILE)) as T
 
         Path::class.java -> {
             getScreenshotAs<File>(OutputType.FILE).toPath() as T
@@ -62,19 +56,7 @@ inline fun <reified T : Any> TakesScreenshot.screenshotAsT(): T {
         URI::class.java -> {
             getScreenshotAs<File>(OutputType.FILE).toURI() as T
         }
-
-        Base64::class.java -> {
-            getScreenshotAs<String>(OutputType.BASE64) as T
-        }
-
-        kotlin.io.encoding.Base64::class.java -> {
-            Base64.getEncoder().encodeToString(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
-        }
-
-        Base64::getEncoder::class.java -> {
-            Base64.getEncoder().encodeToString(getScreenshotAs<ByteArray>(OutputType.BYTES)) as T
-        }
-
+        
         BufferedImage::class.java -> {
             ImageIO.read(getScreenshotAs<File>(OutputType.FILE)) as T
         }
@@ -103,6 +85,16 @@ inline fun <reified T : Any> TakesScreenshot.screenshotAsT(): T {
     }
 }
 
+/**
+ * 通过调整窗体大小，截取全屏截图
+ */
+fun TakesScreenshot.screenshotAsFile(path: String? = null): File {
+    return screenshotAsT<File>().let { if (path != null) it.copyTo(File(path), true) else it }
+}
+
+/**
+ * 通过调整窗体大小，截取全屏截图
+ */
 @OptIn(ExperimentalStdlibApi::class)
 inline fun <reified T : Any> TakesScreenshot.fullScreenshotAsT(): T {
     val driver = when (this) {
@@ -128,7 +120,7 @@ fun TakesScreenshot.fullScreenshotAsFile(path: String? = null): File {
 /**
  * 滚动截图
  * 截图并返回任意类型的全屏截图（支持 WebDriver 整页截图和 WebElement 元素截图）
- * 支持类型：File | Path | URL | URI | Base64 | Base64.Encoder | BufferedImage | String | ByteArray | InputStream | Any
+ * 支持类型：File | Path | URL | URI | ByteArray | InputStream | Any
  */
 @OptIn(ExperimentalStdlibApi::class)
 inline fun <reified T : Any> TakesScreenshot.takeFullPageScreenshot(): T {

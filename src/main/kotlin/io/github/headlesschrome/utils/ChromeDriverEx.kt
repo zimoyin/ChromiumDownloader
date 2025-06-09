@@ -33,6 +33,7 @@ import java.util.*
 import java.util.logging.Level
 import javax.imageio.ImageIO
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.reflect.typeOf
 
 /**
  * 监听窗口创建
@@ -438,6 +439,54 @@ fun ChromeDriver.injectionScriptTag(url: String) {
                     document.head.appendChild(script);
                 """.trimIndent()
     )
+}
+
+/**
+ * 获取全屏截图，通过CDP协议
+ */
+fun ChromeDriver.cdpFullPageScreenshotAsFile(path: String): File {
+    return File(path).apply {
+        if (parentFile != null && !parentFile.exists()) {
+            parentFile.mkdirs()
+        }
+        if (!exists()) {
+            createNewFile()
+        }
+        writeBytes(cdpFullPageScreenshotAs<ByteArray>())
+    }
+}
+
+
+/**
+ * 获取全屏截图，通过CDP协议
+ */
+@OptIn(ExperimentalEncodingApi::class)
+inline fun <reified T : Any> ChromeDriver.cdpFullPageScreenshotAs(): T {
+    // 启用 Page 域
+//    executeCdpCommand("Page.enable", mapOf())
+
+    val params = mapOf("format" to "png", "captureBeyondViewport" to true)
+    val response = executeCdpCommand("Page.captureScreenshot", params)
+    val base64Image = (response["data"] as String).removePrefix("data:image/png;base64,")
+    val base64Bytes: ByteArray by lazy {
+        Base64.getDecoder().decode(base64Image)
+    }
+    val file: File by lazy {
+        File.createTempFile("screenshot", ".png").apply { writeBytes(base64Bytes) }
+    }
+    val input by lazy { ByteArrayInputStream(base64Bytes) }
+    return when (T::class.java) {
+        String::class.java -> base64Image as T
+        ByteArray::class.java -> base64Bytes as T
+        BufferedImage::class.java -> ImageIO.read(input) as T
+        InputStream::class.java -> input as T
+        File::class.java -> file as T
+        URI::class.java -> file.toURI() as T
+        URL::class.java -> file.toURI().toURL() as T
+        Path::class.java -> file.toPath() as T
+        ByteArrayInputStream::class.java -> input as T
+        else -> throw IllegalArgumentException("Unsupported type: ${typeOf<T>()}")
+    }
 }
 
 
