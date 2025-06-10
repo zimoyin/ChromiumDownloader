@@ -66,19 +66,21 @@ val WebElement.driver: WebDriver
  */
 @OptIn(ExperimentalStdlibApi::class)
 fun WebElement.isElementClickable(driver: WebDriver = this.driver): Boolean {
-    // 获取元素的位置和大小
-    val location: Point = getLocation()
-    val size: Dimension = getSize()
+    return runCatching {
+        // 获取元素的位置和大小
+        val location: Point = getLocation()
+        val size: Dimension = getSize()
 
-    // 计算元素的中心点坐标
-    val x: Int = location.getX() + size.getWidth() / 2
-    val y: Int = location.getY() + size.getHeight() / 2
+        // 计算元素的中心点坐标
+        val x: Int = location.getX() + size.getWidth() / 2
+        val y: Int = location.getY() + size.getHeight() / 2
 
-    // 使用 JavaScript 获取该坐标点的最上层元素
-    val script = "return document.elementFromPoint(arguments[0], arguments[1]);"
-    val topElement = (driver as JavascriptExecutor).executeScript(script, x, y) as WebElement?
+        // 使用 JavaScript 获取该坐标点的最上层元素
+        val script = "return document.elementFromPoint(arguments[0], arguments[1]);"
+        val topElement = (driver as JavascriptExecutor).executeScript(script, x, y) as WebElement?
 
-    // 判断该元素是否为目标元素
-    return topElement == this
+        // 判断该元素是否为目标元素
+        topElement == this
+    }.getOrDefault(false)
 }
 
