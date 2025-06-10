@@ -151,3 +151,18 @@ ChromeDriver(options).blockUntilQuitSuspend {
 3. 可以调用 WebDriver.deleteWebDriverSign 隐藏浏览器当前页面的 navigator.webdriver 属性
 4. 可以设置 CWindow.autoExecuteDeleteWebDriverSign = true 来设置每个窗口自带执行 DeleteWebDriverSign
 5. 下载通过 downloadState 可以监听下载状态
+6. 监听网络请求
+```kotlin
+val driver = this
+val devTools = driver.devTools
+devTools.createSessionIfThereIsNotOne()
+
+// 启用 Network 域以捕获网络请求
+devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()))
+
+
+// 添加网络请求监听器
+devTools.addListener(Network.requestWillBeSent()) { entry ->
+    println(entry.request.url)
+}
+```
