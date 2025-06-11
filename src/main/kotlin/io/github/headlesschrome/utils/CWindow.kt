@@ -645,9 +645,8 @@ open class CWindow(
     /**
      * 创建 Actions 用于模拟鼠标键盘操作。只针对当前窗口，如果在操作过程中出现窗口切换会导致操作失误
      */
-    fun actions(block: CWindow.(Actions) -> Unit) = aroundWindow {
-
-        block(Actions(driver))
+    fun actions(block: Actions.(CWindow) -> Unit) = aroundWindow {
+        Actions(driver).block(this)
     }
 
     @JvmOverloads

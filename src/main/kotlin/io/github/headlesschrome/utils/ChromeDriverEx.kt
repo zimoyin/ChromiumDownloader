@@ -492,6 +492,7 @@ inline fun <reified T : Any> ChromeDriver.cdpFullPageScreenshotAs(): T {
     }
 }
 
+fun WebDriver.actions() = Actions(this)
 
 val WebDriver.scrollSize: Dimension
     get() = Dimension(
