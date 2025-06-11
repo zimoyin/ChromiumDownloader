@@ -496,8 +496,8 @@ fun WebDriver.actions() = Actions(this)
 
 val WebDriver.scrollSize: Dimension
     get() = Dimension(
-        ((this as JavascriptExecutor).executeScript("return document.body.scrollWidth;") as Long).toInt(),
-        ((this as JavascriptExecutor).executeScript("return document.body.scrollHeight;") as Long).toInt()
+        ((this as JavascriptExecutor).executeScript("return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);") as Long).toInt(),
+        ((this as JavascriptExecutor).executeScript("return Math.max(document.body.scrollWidth, document.documentElement.scrollWidth);") as Long).toInt()
     )
 
 val WebDriver.userAgent: String
