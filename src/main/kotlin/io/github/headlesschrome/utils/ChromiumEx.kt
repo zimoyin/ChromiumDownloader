@@ -87,7 +87,7 @@ class ChromiumEx(
      * 创建 Actions 用于模拟鼠标键盘操作。只针对当前窗口，如果在操作过程中出现窗口切换会导致操作失误
      */
     fun actions(c: Consumer<Actions>): Unit = actions {
-        c.accept(Actions(it, this))
+        c.accept(Actions( this,it))
     }
 
     class Actions(
